@@ -1,6 +1,7 @@
 package project
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -226,4 +227,21 @@ func SharesRemote(root, notesRemote string) bool {
 		}
 	}
 	return false
+}
+
+var nameRe = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]*$`)
+
+// ValidName guards every place a project name becomes a path or branch.
+func ValidName(name string) error {
+	if !nameRe.MatchString(name) || strings.Contains(name, "..") {
+		return fmt.Errorf("invalid project name %q: use letters, digits, dot, dash or underscore, starting with a letter or digit (pass --name)", name)
+	}
+	return nil
+}
+
+// PointerTracked reports whether the project repo tracks CLAUDE.local.md,
+// in which case writing the pointer would modify a tracked file.
+func PointerTracked(root string) bool {
+	_, err := git.Run(root, "ls-files", "--error-unmatch", "--", "CLAUDE.local.md")
+	return err == nil
 }

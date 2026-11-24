@@ -43,6 +43,19 @@ func linkProject(c *Ctx, o linkOpts) (registry.Project, error) {
 	if name == "" {
 		name = info.Name
 	}
+	if err := project.ValidName(name); err != nil {
+		return registry.Project{}, err
+	}
+	if info.IsGit && project.PointerTracked(info.Root) {
+		return registry.Project{}, Unsafe("CLAUDE.local.md is tracked by this repo, untrack it first")
+	}
+	reg, err := registry.Load(store.RegistryPath(c.Home))
+	if err != nil {
+		return registry.Project{}, err
+	}
+	if e := reg.Find(name); e != nil && e.Path != info.Root {
+		return registry.Project{}, Unsafe("a project named %s is already linked at %s, pass --name", name, e.Path)
+	}
 	var dir, notesRemote string
 	switch o.Store {
 	case "central":
@@ -67,6 +80,9 @@ func linkProject(c *Ctx, o linkOpts) (registry.Project, error) {
 		return registry.Project{}, Unsafe("notes remote %s is also a remote of this project", notesRemote)
 	}
 	if o.Store == "dedicated" {
+		if store.Exists(dir) && store.Remote(dir) != o.Remote {
+			return registry.Project{}, Unsafe("dedicated store for %s already uses remote %s", name, store.Remote(dir))
+		}
 		if err := store.Init(dir, o.Remote, ".gitincognito", "dedicated notes store\n"); err != nil {
 			return registry.Project{}, err
 		}
@@ -93,10 +109,6 @@ func linkProject(c *Ctx, o linkOpts) (registry.Project, error) {
 		return registry.Project{}, err
 	}
 	p := registry.Project{Name: name, Path: info.Root, Store: o.Store, Branch: store.Branch(name), Remote: o.Remote}
-	reg, err := registry.Load(store.RegistryPath(c.Home))
-	if err != nil {
-		return p, err
-	}
 	reg.Upsert(p)
 	if err := reg.Save(store.RegistryPath(c.Home)); err != nil {
 		return p, err

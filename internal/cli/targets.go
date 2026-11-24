@@ -8,6 +8,18 @@ import (
 	"github.com/glincker/gitincognito/internal/store"
 )
 
+// checkEntry rejects registry rows whose name or branch could escape into
+// other paths or be read as git options.
+func checkEntry(p registry.Project) error {
+	if err := project.ValidName(p.Name); err != nil {
+		return err
+	}
+	if p.Branch != store.Branch(p.Name) {
+		return fmt.Errorf("invalid branch %q for project %s", p.Branch, p.Name)
+	}
+	return nil
+}
+
 func loadRegistry(c *Ctx) (*registry.Registry, error) {
 	return registry.Load(store.RegistryPath(c.Home))
 }

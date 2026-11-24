@@ -25,6 +25,9 @@ func cmdUnlink(c *Ctx, args []string) error {
 		return err
 	}
 	p := ts[0]
+	if err := checkEntry(p); err != nil {
+		return err
+	}
 	wt := filepath.Join(p.Path, ".incognito")
 	if st, _ := git.Run(wt, "status", "--porcelain"); st != "" && !*force {
 		return Unsafe("notes have unsynced changes, run sync or pass --force")

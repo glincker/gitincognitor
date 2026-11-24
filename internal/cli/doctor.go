@@ -36,10 +36,17 @@ func cmdDoctor(c *Ctx, args []string) error {
 		add("", "git-version", "ok", "")
 	}
 	for _, p := range reg.Projects {
+		if err := checkEntry(p); err != nil {
+			add(p.Name, "entry", "fail", err.Error())
+			continue
+		}
 		wt := filepath.Join(p.Path, ".incognito")
 		if _, err := os.Stat(p.Path); err != nil {
 			add(p.Name, "path", "fail", "project path missing")
 			continue
+		}
+		if project.Detect(p.Path).IsGit && project.PointerTracked(project.Detect(p.Path).Root) {
+			add(p.Name, "pointer-tracked", "fail", "CLAUDE.local.md is tracked by the project repo")
 		}
 		if _, err := os.Stat(filepath.Join(wt, ".git")); err != nil {
 			add(p.Name, "linked", "fail", ".incognito is not a notes worktree, run: git incognito restore")

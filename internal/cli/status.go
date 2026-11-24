@@ -20,6 +20,7 @@ type statusRow struct {
 	Dirty    bool   `json:"dirty"`
 	Ahead    int    `json:"ahead"`
 	LastSync string `json:"last_sync,omitempty"`
+	Error    string `json:"error,omitempty"`
 }
 
 func cmdStatus(c *Ctx, args []string) error {
@@ -41,6 +42,12 @@ func cmdStatus(c *Ctx, args []string) error {
 	for _, p := range ts {
 		wt := filepath.Join(p.Path, ".incognito")
 		r := statusRow{Name: p.Name, Path: p.Path}
+		if err := checkEntry(p); err != nil {
+			r.Error = err.Error()
+			rows = append(rows, r)
+			lines = append(lines, fmt.Sprintf("%s: error: %s", r.Name, r.Error))
+			continue
+		}
 		if _, err := os.Stat(filepath.Join(wt, ".git")); err == nil {
 			r.Linked = true
 			st, _ := git.Run(wt, "status", "--porcelain")

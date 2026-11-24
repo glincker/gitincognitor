@@ -31,7 +31,12 @@ func cmdSync(c *Ctx, args []string) error {
 	var lines []string
 	failed := false
 	for _, p := range ts {
-		r := syncer.Sync(c.Home, p, syncer.DebounceFromEnv(), time.Now(), *force)
+		r := syncer.Result{Name: p.Name}
+		if err := checkEntry(p); err != nil {
+			r.Error = err.Error()
+		} else {
+			r = syncer.Sync(c.Home, p, syncer.DebounceFromEnv(), time.Now(), *force)
+		}
 		results = append(results, r)
 		lines = append(lines, fmt.Sprintf("%s: committed=%v pushed=%v %s%s", r.Name, r.Committed, r.Pushed, r.Skipped, r.Error))
 		failed = failed || r.Error != ""

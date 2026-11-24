@@ -58,6 +58,9 @@ func cmdRestore(c *Ctx, args []string) error {
 }
 
 func restoreOne(c *Ctx, p registry.Project) (string, error) {
+	if err := checkEntry(p); err != nil {
+		return "", err
+	}
 	if _, err := os.Stat(p.Path); err != nil {
 		return "skipped: project path missing, clone it and rerun", nil
 	}
