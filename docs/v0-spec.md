@@ -29,6 +29,7 @@ All accept `--json`. Exit codes: 0 ok, 1 error, 2 unsafe state (needs a human).
 | `status` | Per project: linked, dirty, ahead or behind, last sync. |
 | `doctor` | Checks: exclude entries present, nothing under `.incognito/` tracked by the project, remote is not the project's own remote, registry matches worktrees. |
 | `unlink` | Remove worktree and exclude entries, keep the branch. |
+| `hooks install` | Explicit opt-in. Adds a Claude Code Stop hook and a launchd timer that run `sync --quiet`. Never run implicitly by `link`. |
 
 ## Registry
 
@@ -42,6 +43,10 @@ projects:
     store: central
     branch: proj/thesvg
 ```
+
+## Auto-sync (day 1)
+
+`sync --quiet` exits 0 to hooks, commits locally when the push fails, retries next run, and skips when the last sync is newer than `GITINCOGNITO_SYNC_DEBOUNCE_SECS`. Triggers: Claude Code Stop hook (agent-written notes) and a launchd timer (hand edits).
 
 ## Safety rules
 
@@ -73,4 +78,3 @@ Desktop app, encryption, team sharing of notes, conflict-merge UI, Windows path 
 ## Open items
 
 - Worktree metadata is per store clone. `restore` rebuilds it, so it is not backed up.
-- Decide whether `sync` runs from a Claude Code Stop hook by default or only on request.
