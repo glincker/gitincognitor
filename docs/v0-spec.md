@@ -33,7 +33,7 @@ All accept `--json`. Exit codes: 0 ok, 1 error, 2 unsafe state (needs a human).
 
 ## Registry
 
-`~/.incognito/registry.yml`, also committed to the store's `main`:
+`~/.incognito/store/registry.yml`, committed on the store's `main` (the store checkout is its only copy):
 
 ```yaml
 version: 1
