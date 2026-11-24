@@ -1,11 +1,13 @@
 package cli
 
 import (
+	"os"
 	"path/filepath"
 
 	"github.com/glincker/gitincognito/internal/git"
 	"github.com/glincker/gitincognito/internal/project"
 	"github.com/glincker/gitincognito/internal/store"
+	"github.com/glincker/gitincognito/internal/syncer"
 )
 
 func init() { commands["unlink"] = cmdUnlink }
@@ -29,15 +31,22 @@ func cmdUnlink(c *Ctx, args []string) error {
 		return err
 	}
 	wt := filepath.Join(p.Path, ".incognito")
-	if st, _ := git.Run(wt, "status", "--porcelain"); st != "" && !*force {
-		return Unsafe("notes have unsynced changes, run sync or pass --force")
-	}
 	dir := store.CentralDir(c.Home)
 	if p.Store == "dedicated" {
 		dir = store.DedicatedDir(c.Home, p.Name)
 	}
-	if _, err := git.Run(dir, "worktree", "remove", "--force", wt); err != nil {
-		return err
+	// Prune first so a worktree deleted by hand is cleanup only.
+	_, _ = git.Run(dir, "worktree", "prune")
+	if _, err := os.Stat(wt); err == nil {
+		if st, _ := git.Run(wt, "status", "--porcelain", "--ignored"); st != "" && !*force {
+			return Unsafe("notes have unsynced or ignored files, run sync or pass --force")
+		}
+		if syncer.Ahead(wt) > 0 && !*force {
+			return Unsafe("notes have commits that are not pushed, run sync or pass --force")
+		}
+		if _, err := git.Run(dir, "worktree", "remove", "--force", wt); err != nil {
+			return err
+		}
 	}
 	if info := project.Detect(p.Path); info.IsGit {
 		if err := project.RemoveExclude(info.Root, ".incognito/", "CLAUDE.local.md"); err != nil {
