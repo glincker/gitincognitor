@@ -1,8 +1,10 @@
 package store
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/glincker/gitincognito/internal/git"
 )
@@ -25,11 +27,22 @@ func Remote(dir string) string {
 	return out
 }
 
+// CheckRemote keeps a remote from being read as a git option.
+func CheckRemote(remote string) error {
+	if remote == "" || strings.HasPrefix(remote, "-") {
+		return errors.New("invalid remote " + `"` + remote + `"`)
+	}
+	return nil
+}
+
 // Init creates a store with a seed commit on main and pushes it, so the
 // remote's HEAD never dangles. Safe to call again.
 func Init(dir, remote, seedFile, seedBody string) error {
 	if Exists(dir) {
 		return nil
+	}
+	if err := CheckRemote(remote); err != nil {
+		return err
 	}
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
@@ -46,7 +59,7 @@ func Init(dir, remote, seedFile, seedBody string) error {
 	if err := git.Commit(dir, "chore: init store"); err != nil {
 		return err
 	}
-	if _, err := git.Run(dir, "remote", "add", "origin", remote); err != nil {
+	if _, err := git.Run(dir, "remote", "add", "origin", "--", remote); err != nil {
 		return err
 	}
 	_, err := git.Run(dir, "push", "-q", "-u", "origin", "main")
@@ -54,24 +67,33 @@ func Init(dir, remote, seedFile, seedBody string) error {
 }
 
 func Clone(dir, remote string) error {
+	if err := CheckRemote(remote); err != nil {
+		return err
+	}
 	if err := os.MkdirAll(filepath.Dir(dir), 0o755); err != nil {
 		return err
 	}
-	_, err := git.Run("", "clone", "-q", remote, dir)
+	_, err := git.Run("", "clone", "-q", "--", remote, dir)
 	return err
 }
 
 // AddWorktree checks out branch at path: local branch first, then the remote
-// branch (restore), else a fresh orphan branch (first link).
-func AddWorktree(storeDir, branch, path string) error {
+// branch (restore). A missing branch is created as a fresh orphan only when
+// allowNew is set (first link), so restore can never replace lost notes with
+// an empty branch.
+func AddWorktree(storeDir, branch, path string, allowNew bool) error {
 	_, _ = git.Run(storeDir, "worktree", "prune")
-	_, _ = git.Run(storeDir, "fetch", "-q", "origin")
+	_, fetchErr := git.Run(storeDir, "fetch", "-q", "origin")
 	var err error
 	switch {
 	case git.HasRef(storeDir, "refs/heads/"+branch):
 		_, err = git.Run(storeDir, "worktree", "add", "-q", path, branch)
 	case git.HasRef(storeDir, "refs/remotes/origin/"+branch):
 		_, err = git.Run(storeDir, "worktree", "add", "-q", "--track", "-b", branch, path, "origin/"+branch)
+	case !allowNew && fetchErr != nil:
+		return errors.New("cannot reach the store remote and branch is missing: " + branch)
+	case !allowNew:
+		return errors.New("branch is missing in the store: " + branch)
 	default:
 		_, err = git.Run(storeDir, "worktree", "add", "-q", "--orphan", "-b", branch, path)
 	}

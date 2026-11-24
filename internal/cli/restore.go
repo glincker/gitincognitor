@@ -61,6 +61,9 @@ func restoreOne(c *Ctx, p registry.Project) (string, error) {
 	if err := checkEntry(p); err != nil {
 		return "", err
 	}
+	if !filepath.IsAbs(p.Path) {
+		return "", fmt.Errorf("registry path %q is not absolute", p.Path)
+	}
 	if _, err := os.Stat(p.Path); err != nil {
 		return "skipped: project path missing, clone it and rerun", nil
 	}
@@ -78,7 +81,7 @@ func restoreOne(c *Ctx, p registry.Project) (string, error) {
 		if _, err := os.Stat(filepath.Join(wt, ".git")); err != nil {
 			return "skipped: .incognito exists and is not a notes worktree", nil
 		}
-	} else if err := store.AddWorktree(dir, p.Branch, wt); err != nil {
+	} else if err := store.AddWorktree(dir, p.Branch, wt, false); err != nil {
 		return "", err
 	}
 	info := project.Detect(p.Path)

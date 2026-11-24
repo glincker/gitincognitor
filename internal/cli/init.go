@@ -18,6 +18,9 @@ func cmdInit(c *Ctx, args []string) error {
 	if *remote == "" {
 		return errors.New("--remote is required")
 	}
+	if err := store.CheckRemote(*remote); err != nil {
+		return err
+	}
 	if err := provider.CheckPrivate(*remote); err != nil {
 		return Unsafe("%v", err)
 	}

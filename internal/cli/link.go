@@ -68,6 +68,9 @@ func linkProject(c *Ctx, o linkOpts) (registry.Project, error) {
 		if o.Remote == "" {
 			return registry.Project{}, errors.New("--remote is required with --store dedicated")
 		}
+		if err := store.CheckRemote(o.Remote); err != nil {
+			return registry.Project{}, err
+		}
 		if err := provider.CheckPrivate(o.Remote); err != nil {
 			return registry.Project{}, Unsafe("%v", err)
 		}
@@ -92,7 +95,7 @@ func linkProject(c *Ctx, o linkOpts) (registry.Project, error) {
 		if _, err := os.Stat(filepath.Join(wt, ".git")); err != nil {
 			return registry.Project{}, Unsafe(".incognito exists and is not a notes worktree, use: git incognito adopt")
 		}
-	} else if err := store.AddWorktree(dir, store.Branch(name), wt); err != nil {
+	} else if err := store.AddWorktree(dir, store.Branch(name), wt, true); err != nil {
 		return registry.Project{}, err
 	}
 	if info.IsGit {

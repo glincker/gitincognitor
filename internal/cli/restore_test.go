@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/glincker/gitincognito/internal/project"
+	"github.com/glincker/gitincognito/internal/registry"
+	"github.com/glincker/gitincognito/internal/store"
 	"github.com/glincker/gitincognito/internal/testutil"
 )
 
@@ -57,5 +59,39 @@ func TestRestoreSkipsMissingProjectPath(t *testing.T) {
 	}
 	if !contains(out, "path missing") {
 		t.Fatalf("want skip message: %s", out)
+	}
+}
+
+func TestRestoreSkipsRelativeRegistryPath(t *testing.T) {
+	home, _, proj := linked(t)
+	reg, _ := registry.Load(store.RegistryPath(home))
+	reg.Projects[0].Path = "relative/dir"
+	if err := reg.Save(store.RegistryPath(home)); err != nil {
+		t.Fatal(err)
+	}
+	code, out := run(t, proj, "restore", "--all", "--json")
+	if code != 0 || !contains(out, "not absolute") {
+		t.Fatalf("want error row, got %d: %s", code, out)
+	}
+}
+
+func TestRestoreDoesNotInventBranchWhenStoreUnreachable(t *testing.T) {
+	home, _, proj := linked(t)
+	st := filepath.Join(home, "store")
+	writeNote(t, proj, "a.md", "x")
+	run(t, proj, "sync")
+	if err := os.RemoveAll(filepath.Join(proj, ".incognito")); err != nil {
+		t.Fatal(err)
+	}
+	testutil.Git(t, st, "worktree", "prune")
+	testutil.Git(t, st, "branch", "-D", "proj/demo")
+	testutil.Git(t, st, "update-ref", "-d", "refs/remotes/origin/proj/demo")
+	testutil.Git(t, st, "remote", "set-url", "origin", "/nonexistent/x.git")
+	code, out := run(t, proj, "restore", "--all", "--json")
+	if code != 0 || !contains(out, "branch is missing") {
+		t.Fatalf("want error row, got %d: %s", code, out)
+	}
+	if _, err := os.Stat(filepath.Join(proj, ".incognito")); !os.IsNotExist(err) {
+		t.Fatal("no fresh worktree may be created")
 	}
 }
