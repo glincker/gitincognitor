@@ -1,12 +1,15 @@
 package cli
 
 import (
+	"bytes"
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 func init() { commands["hooks"] = cmdHooks }
@@ -40,7 +43,7 @@ func cmdHooks(c *Ctx, args []string) error {
 	if err != nil {
 		return err
 	}
-	cmd := bin + " sync --quiet --all"
+	cmd := hookCommand(bin, os.Getenv("GITINCOGNITO_HOME"))
 	var done []string
 	if *claude {
 		msg, err := installClaudeHook(*settings, cmd, *dry)
@@ -50,14 +53,14 @@ func cmdHooks(c *Ctx, args []string) error {
 		done = append(done, msg)
 	}
 	if *launchd {
-		body := plistBody(bin)
+		body := plistBody(bin, os.Getenv("GITINCOGNITO_HOME"))
 		if *dry {
 			done = append(done, "would write "+*plist)
 		} else {
 			if err := os.MkdirAll(filepath.Dir(*plist), 0o755); err != nil {
 				return err
 			}
-			if err := os.WriteFile(*plist, []byte(body), 0o644); err != nil {
+			if err := writeAtomic(*plist, []byte(body), 0o644); err != nil {
 				return err
 			}
 			done = append(done, "wrote "+*plist+", load it with: launchctl load "+*plist)
@@ -67,21 +70,70 @@ func cmdHooks(c *Ctx, args []string) error {
 	return nil
 }
 
+func shQuote(s string) string { return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'" }
+
+// hookCommand quotes the binary and carries GITINCOGNITO_HOME so the hook
+// syncs the same store the user installed it from.
+func hookCommand(bin, home string) string {
+	prefix := ""
+	if home != "" {
+		prefix = "GITINCOGNITO_HOME=" + shQuote(home) + " "
+	}
+	return prefix + shQuote(bin) + " sync --quiet --all"
+}
+
+// writeAtomic writes via a temp file in the same dir so a crash never leaves a
+// half-written settings file.
+func writeAtomic(path string, data []byte, mode os.FileMode) error {
+	tmp, err := os.CreateTemp(filepath.Dir(path), ".gitincognito-*")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(tmp.Name())
+	if _, err := tmp.Write(data); err != nil {
+		tmp.Close()
+		return err
+	}
+	if err := tmp.Chmod(mode); err != nil {
+		tmp.Close()
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		return err
+	}
+	return os.Rename(tmp.Name(), path)
+}
+
 func installClaudeHook(path, cmd string, dry bool) (string, error) {
 	m := map[string]any{}
 	raw, err := os.ReadFile(path)
 	if err == nil {
-		if err := json.Unmarshal(raw, &m); err != nil {
+		var v any
+		if err := json.Unmarshal(raw, &v); err != nil {
 			return "", fmt.Errorf("%s is not valid JSON: %w", path, err)
 		}
+		obj, ok := v.(map[string]any)
+		if !ok {
+			return "", fmt.Errorf("%s is not a JSON object, not touching it", path)
+		}
+		m = obj
 	}
-	hooks, _ := m["hooks"].(map[string]any)
-	if hooks == nil {
-		hooks = map[string]any{}
+	hooks := map[string]any{}
+	if h, ok := m["hooks"]; ok {
+		if hooks, ok = h.(map[string]any); !ok {
+			return "", fmt.Errorf("%s: \"hooks\" is not an object, fix it by hand", path)
+		}
 	}
-	stop, _ := hooks["Stop"].([]any)
+	var stop []any
+	if st, ok := hooks["Stop"]; ok {
+		if stop, ok = st.([]any); !ok {
+			return "", fmt.Errorf("%s: \"hooks.Stop\" is not a list, fix it by hand", path)
+		}
+	}
+	enc, _ := json.Marshal(cmd)
+	needle := strings.Trim(string(enc), `"`)
 	for _, e := range stop {
-		if b, _ := json.Marshal(e); string(b) != "" && contains(string(b), cmd) {
+		if b, _ := json.Marshal(e); strings.Contains(string(b), needle) {
 			return "Stop hook already present in " + path, nil
 		}
 	}
@@ -103,26 +155,27 @@ func installClaudeHook(path, cmd string, dry bool) (string, error) {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return "", err
 	}
-	return "added Stop hook to " + path, os.WriteFile(path, append(out, '\n'), 0o644)
+	return "added Stop hook to " + path, writeAtomic(path, append(out, '\n'), 0o644)
 }
 
-func plistBody(bin string) string {
+func xmlEsc(s string) string {
+	var b bytes.Buffer
+	_ = xml.EscapeText(&b, []byte(s))
+	return b.String()
+}
+
+func plistBody(bin, home string) string {
+	env := ""
+	if home != "" {
+		env = "<key>EnvironmentVariables</key><dict><key>GITINCOGNITO_HOME</key><string>" + xmlEsc(home) + "</string></dict>\n"
+	}
 	return fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
 <key>Label</key><string>dev.glincker.gitincognito</string>
 <key>ProgramArguments</key><array><string>%s</string><string>sync</string><string>--quiet</string><string>--all</string></array>
-<key>StartInterval</key><integer>%d</integer>
+%s<key>StartInterval</key><integer>%d</integer>
 <key>RunAtLoad</key><true/>
 </dict></plist>
-`, bin, timerSecs())
-}
-
-func contains(s, sub string) bool {
-	for i := 0; i+len(sub) <= len(s); i++ {
-		if s[i:i+len(sub)] == sub {
-			return true
-		}
-	}
-	return false
+`, xmlEsc(bin), env, timerSecs())
 }

@@ -62,3 +62,38 @@ func TestHooksInstallWritesPlist(t *testing.T) {
 		t.Fatalf("bad plist:\n%s", b)
 	}
 }
+
+func TestHooksInstallRefusesWrongTypesAndNonObjects(t *testing.T) {
+	testutil.Setup(t)
+	for _, body := range []string{`{"hooks":[]}`, `{"hooks":{"Stop":{}}}`, `{"hooks":"x"}`, `null`, `[]`, `"s"`} {
+		d := t.TempDir()
+		settings := filepath.Join(d, "settings.json")
+		_ = os.WriteFile(settings, []byte(body), 0o644)
+		if code, _ := run(t, d, "hooks", "install", "--claude", "--settings", settings); code == 0 {
+			t.Fatalf("%s: want error", body)
+		}
+		if b, _ := os.ReadFile(settings); string(b) != body {
+			t.Fatalf("%s: file must not change, got %s", body, b)
+		}
+	}
+}
+
+func TestHooksInstallCarriesHomeOnlyWhenSet(t *testing.T) {
+	d := t.TempDir()
+	settings := filepath.Join(d, "s.json")
+	testutil.Setup(t)
+	if code, out := run(t, d, "hooks", "install", "--claude", "--settings", settings); code != 0 {
+		t.Fatal(out)
+	}
+	if b, _ := os.ReadFile(settings); !strings.Contains(string(b), "GITINCOGNITO_HOME=") {
+		t.Fatalf("home not carried:\n%s", b)
+	}
+	t.Setenv("GITINCOGNITO_HOME", "")
+	s2 := filepath.Join(d, "s2.json")
+	if code, out := run(t, d, "hooks", "install", "--claude", "--settings", s2); code != 0 {
+		t.Fatal(out)
+	}
+	if b, _ := os.ReadFile(s2); strings.Contains(string(b), "GITINCOGNITO_HOME") {
+		t.Fatalf("home must not appear when unset:\n%s", b)
+	}
+}
