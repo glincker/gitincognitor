@@ -1,4 +1,4 @@
-# gitincognito v0 spec
+# gitincognitor v0 spec
 
 Private notes that live inside any repo, never show up in it, and are backed up to a private remote you own. CLI only. OSS, MIT.
 
@@ -23,7 +23,7 @@ All accept `--json`. Exit codes: 0 ok, 1 error, 2 unsafe state (needs a human).
 | --- | --- |
 | `init --remote <url>` | Create the store, push a seed `main`, write the registry. Refuses a remote it cannot verify as private when a provider API is available. |
 | `link [--store dedicated --remote <url>]` | Create branch and worktree, write exclude entries, write the `CLAUDE.local.md` pointer, register the project. Idempotent. |
-| `adopt <path>` | Move an existing folder (for example docs-local) into the project's branch, then link. Refuses if the target is non-empty and tracked by the project repo. |
+| `adopt [--dry-run] <path>` | Move an existing folder (for example docs-local) into the project's branch, then link. Refuses if the target is non-empty and tracked by the project repo. `--dry-run` writes nothing (works before `init`), reports copy and skip counts and bytes, and exits 2 on any refusal a real run would hit (nested git, symlink, tracked path or pointer, a different copy already in the notes). |
 | `sync [--all]` | Commit and push notes. No-op when clean. Never force-pushes. |
 | `restore [--all]` | Clone the store if missing, recreate each worktree, exclude entries and pointer from the registry. Prunes stale worktrees. |
 | `status` | Per project: linked, dirty, ahead or behind, last sync. |
@@ -31,9 +31,18 @@ All accept `--json`. Exit codes: 0 ok, 1 error, 2 unsafe state (needs a human).
 | `unlink` | Remove worktree and exclude entries, keep the branch. |
 | `hooks install` | Explicit opt-in. Adds a Claude Code Stop hook and a launchd timer that run `sync --quiet`. Never run implicitly by `link`. |
 
+## Ignoring paths on adopt
+
+`<folder>/.incognitoignore` (gitignore syntax) lists paths adopt leaves exactly where they are, for example reference clones or bulky files.
+
+- Matching is done by `git check-ignore` in a scratch repo, one batch per directory level. An ignored directory is never descended into.
+- Ignored paths skip the nested `.git` and symlink checks, the copy, the tracked verification and the deletion.
+- After a verified push only copied files are deleted, then directories that became empty. A directory holding ignored content stays.
+- `.incognitoignore` is copied into the notes but also stays in the folder, so a rerun keeps the rules and is a no-op.
+
 ## Registry
 
-`~/.incognito/registry.yml`, also committed to the store's `main`:
+`~/.incognito/store/registry.yml`, committed on the store's `main` (the store checkout is its only copy):
 
 ```yaml
 version: 1
@@ -46,7 +55,7 @@ projects:
 
 ## Auto-sync (day 1)
 
-`sync --quiet` exits 0 to hooks, commits locally when the push fails, retries next run, and skips when the last sync is newer than `GITINCOGNITO_SYNC_DEBOUNCE_SECS`. Triggers: Claude Code Stop hook (agent-written notes) and a launchd timer (hand edits).
+`sync --quiet` exits 0 to hooks, commits locally when the push fails, retries next run, and skips when the last sync is newer than `GITINCOGNITOR_SYNC_DEBOUNCE_SECS`. Triggers: Claude Code Stop hook (agent-written notes) and a launchd timer (hand edits).
 
 ## Safety rules
 
@@ -58,12 +67,12 @@ projects:
 
 ## Agent integration
 
-- The `CLAUDE.local.md` pointer names `.incognito/`, the commands, and "run `git incognito sync` after writing notes".
+- The `CLAUDE.local.md` pointer names `.incognito/`, the commands, and "run `git incognitor sync` after writing notes".
 - No MCP server. JSON output from the CLI is the agent interface.
 
 ## Implementation
 
-- Go, single static binary `git-incognito` (so `git incognito ...` works). Shells out to `git`; requires git 2.42 or newer (`worktree add --orphan`).
+- Go, single static binary `git-incognitor` (so `git incognitor ...` works). Shells out to `git`; requires git 2.42 or newer (`worktree add --orphan`).
 - Layout: `cmd/`, `internal/{git,registry,store,project,guard}`.
 - Tests use temp repos and local bare remotes only. No network.
 
