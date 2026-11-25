@@ -30,7 +30,8 @@ func TestMinVersionOK(t *testing.T) {
 func TestCommitWithoutIdentity(t *testing.T) {
 	testutil.Setup(t)
 	dir := testutil.Project(t, "p")
-	testutil.Git(t, dir, "commit", "-q", "--allow-empty", "-m", "x")
+	// CI runners have no git identity, so the setup commit must carry its own.
+	testutil.Git(t, dir, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "x")
 	if err := git.Commit(dir, "y"); err == nil {
 		t.Fatal("nothing to commit should error")
 	}
