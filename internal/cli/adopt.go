@@ -3,7 +3,6 @@ package cli
 import (
 	"errors"
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -21,6 +20,7 @@ func init() { commands["adopt"] = cmdAdopt }
 func cmdAdopt(c *Ctx, args []string) error {
 	fs := c.flags("adopt")
 	name := fs.String("name", "", "project name (default: folder name)")
+	dry := fs.Bool("dry-run", false, "report what would be copied and skipped, write nothing")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -39,8 +39,15 @@ func cmdAdopt(c *Ctx, args []string) error {
 	if err != nil {
 		return err
 	}
-	if err := checkAdoptTree(src); err != nil {
+	plan, err := buildAdoptPlan(src, *dry)
+	if err != nil {
 		return err
+	}
+	if *dry {
+		return reportDryRun(c, plan)
+	}
+	if len(plan.Refusals) > 0 {
+		return Unsafe("%s", strings.Join(plan.Refusals, "; "))
 	}
 	if info.IsGit {
 		if out, _ := git.Run(info.Root, "ls-files", "--", src); out != "" {
@@ -53,9 +60,16 @@ func cmdAdopt(c *Ctx, args []string) error {
 	}
 	dest := filepath.Join(p.Path, ".incognito", filepath.Base(src))
 	if _, err := os.Stat(dest); err == nil {
+		if alreadyAdopted(src, dest, plan.Files) {
+			c.Emit(map[string]any{"ok": true, "adopted": dest, "noop": true}, "already adopted "+src+" -> "+dest)
+			return nil
+		}
 		return Unsafe("%s already exists in the notes", dest)
 	}
-	if err := os.CopyFS(dest, os.DirFS(src)); err != nil {
+	if err := os.MkdirAll(dest, 0o755); err != nil {
+		return err
+	}
+	if err := copyPlanned(src, dest, plan.Files); err != nil {
 		return err
 	}
 	wt := filepath.Join(p.Path, ".incognito")
@@ -63,13 +77,17 @@ func cmdAdopt(c *Ctx, args []string) error {
 	if r.Error != "" || (!r.Pushed && syncer.Ahead(wt) > 0) {
 		return errors.New("kept the original folder, notes not pushed yet: " + r.Error)
 	}
-	if err := verifyAdopted(wt, filepath.Base(src), src); err != nil {
+	if err := verifyAdopted(wt, filepath.Base(src), plan.Files); err != nil {
 		return err
 	}
-	if err := os.RemoveAll(src); err != nil {
+	if err := removeAdopted(src, plan); err != nil {
 		return err
 	}
-	c.Emit(map[string]any{"ok": true, "adopted": dest}, "adopted "+src+" -> "+dest)
+	msg := "adopted " + src + " -> " + dest
+	if len(plan.IgnoredTop) > 0 {
+		msg += fmt.Sprintf("\nleft %d ignored entries in place; the rules stay in %s and are also saved in the notes", len(plan.IgnoredTop), filepath.Join(src, ignoreFileName))
+	}
+	c.Emit(map[string]any{"ok": true, "adopted": dest, "ignored": plan.IgnoredTop}, msg)
 	return nil
 }
 
@@ -103,25 +121,9 @@ func checkAdoptSource(src string, info project.Info) (string, error) {
 	return real, nil
 }
 
-// checkAdoptTree refuses trees git cannot carry whole: nested repos and symlinks.
-func checkAdoptTree(src string) error {
-	return filepath.WalkDir(src, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		switch {
-		case d.Name() == ".git":
-			return Unsafe("%s is a nested git entry, adopt would lose its history", path)
-		case d.Type()&fs.ModeSymlink != 0:
-			return Unsafe("%s is a symlink, replace it with the real file first", path)
-		}
-		return nil
-	})
-}
-
 // verifyAdopted proves every file in src is committed in the notes branch and
 // nothing was left ignored or untracked, so deleting src cannot lose data.
-func verifyAdopted(wt, base, src string) error {
+func verifyAdopted(wt, base string, files []string) error {
 	out, err := git.Run(wt, "--literal-pathspecs", "ls-files", "-z", "--", base)
 	if err != nil {
 		return err
@@ -131,15 +133,11 @@ func verifyAdopted(wt, base, src string) error {
 		tracked[f] = true
 	}
 	var missing []string
-	_ = filepath.WalkDir(src, func(path string, d fs.DirEntry, err error) error {
-		if err == nil && d.Type().IsRegular() {
-			rel, _ := filepath.Rel(src, path)
-			if !tracked[filepath.ToSlash(filepath.Join(base, rel))] {
-				missing = append(missing, rel)
-			}
+	for _, rel := range files {
+		if !tracked[base+"/"+rel] {
+			missing = append(missing, rel)
 		}
-		return nil
-	})
+	}
 	if st, _ := git.Run(wt, "status", "--porcelain", "--ignored"); st != "" && len(missing) == 0 {
 		missing = append(missing, "(uncommitted or ignored files in notes)")
 	}

@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 
 	"github.com/glincker/gitincognito/internal/git"
 )
@@ -28,6 +29,11 @@ var commands = map[string]cmdFunc{}
 type UnsafeError struct{ Msg string }
 
 func (e *UnsafeError) Error() string { return e.Msg }
+
+// quietExit carries an exit code for a command that already printed its report.
+type quietExit struct{ code int }
+
+func (e quietExit) Error() string { return "exit " + strconv.Itoa(e.code) }
 
 func Unsafe(format string, a ...any) error { return &UnsafeError{Msg: fmt.Sprintf(format, a...)} }
 
@@ -81,6 +87,10 @@ func (c *Ctx) usage() int {
 }
 
 func (c *Ctx) fail(err error) int {
+	var q quietExit
+	if errors.As(err, &q) {
+		return q.code
+	}
 	code := 1
 	var u *UnsafeError
 	if errors.As(err, &u) {

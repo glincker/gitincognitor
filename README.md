@@ -26,7 +26,7 @@ All commands accept `--json`. Exit codes: 0 ok, 1 error, 2 unsafe state that nee
 | --- | --- |
 | `init --remote <url>` | Create the store, push a seed `main`, write the registry. |
 | `link` | Create branch and worktree, write exclude entries and the `CLAUDE.local.md` pointer, register the project. |
-| `adopt <folder>` | Move an existing folder into the notes, push, then remove the original. |
+| `adopt [--dry-run] <folder>` | Move an existing folder into the notes, push, then remove the original. A `.incognitoignore` file in the folder (gitignore syntax) keeps reference clones or bulky files where they are. `--dry-run` previews and writes nothing. |
 | `sync [--all]` | Commit and push notes. No-op when clean. Never force-pushes. |
 | `restore [--all]` | Recreate the store, worktrees, exclude entries and pointers after a crash. |
 | `status` | Per project: linked, dirty, ahead, last sync. |
