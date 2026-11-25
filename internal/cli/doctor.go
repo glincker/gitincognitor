@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/glincker/gitincognito/internal/git"
-	"github.com/glincker/gitincognito/internal/project"
-	"github.com/glincker/gitincognito/internal/store"
+	"github.com/glincker/gitincognitor/internal/git"
+	"github.com/glincker/gitincognitor/internal/project"
+	"github.com/glincker/gitincognitor/internal/store"
 )
 
 func init() { commands["doctor"] = cmdDoctor }
@@ -49,7 +49,7 @@ func cmdDoctor(c *Ctx, args []string) error {
 			add(p.Name, "pointer-tracked", "fail", "CLAUDE.local.md is tracked by the project repo")
 		}
 		if _, err := os.Stat(filepath.Join(wt, ".git")); err != nil {
-			add(p.Name, "linked", "fail", ".incognito is not a notes worktree, run: git incognito restore")
+			add(p.Name, "linked", "fail", ".incognito is not a notes worktree, run: git incognitor restore")
 			continue
 		}
 		add(p.Name, "linked", "ok", "")

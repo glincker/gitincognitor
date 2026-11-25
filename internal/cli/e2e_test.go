@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/testutil"
+	"github.com/glincker/gitincognitor/internal/testutil"
 )
 
 // Whole story: init, adopt existing notes, crash, restore, doctor is green.

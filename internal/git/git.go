@@ -62,7 +62,7 @@ func Identity(dir string) []string {
 	if e, _ := Run(dir, "config", "user.email"); e != "" {
 		return nil
 	}
-	return []string{"-c", "user.name=gitincognito", "-c", "user.email=gitincognito@localhost"}
+	return []string{"-c", "user.name=gitincognitor", "-c", "user.email=gitincognitor@localhost"}
 }
 
 func Commit(dir, msg string) error {

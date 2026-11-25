@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/testutil"
+	"github.com/glincker/gitincognitor/internal/testutil"
 )
 
 func writeNote(t *testing.T, proj, name, body string) {
@@ -38,7 +38,7 @@ func TestSyncNoopWhenClean(t *testing.T) {
 
 func TestSyncDebounce(t *testing.T) {
 	_, _, proj := linked(t)
-	t.Setenv("GITINCOGNITO_SYNC_DEBOUNCE_SECS", "3600")
+	t.Setenv("GITINCOGNITOR_SYNC_DEBOUNCE_SECS", "3600")
 	writeNote(t, proj, "a.md", "one")
 	run(t, proj, "sync")
 	writeNote(t, proj, "b.md", "two")

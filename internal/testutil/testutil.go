@@ -5,17 +5,17 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/git"
+	"github.com/glincker/gitincognitor/internal/git"
 )
 
-// Setup isolates git config and points GITINCOGNITO_HOME at a temp dir.
+// Setup isolates git config and points GITINCOGNITOR_HOME at a temp dir.
 func Setup(t *testing.T) string {
 	t.Helper()
 	home := filepath.Join(t.TempDir(), "home")
-	t.Setenv("GITINCOGNITO_HOME", home)
+	t.Setenv("GITINCOGNITOR_HOME", home)
 	t.Setenv("GIT_CONFIG_GLOBAL", os.DevNull)
 	t.Setenv("GIT_CONFIG_NOSYSTEM", "1")
-	t.Setenv("GITINCOGNITO_SYNC_DEBOUNCE_SECS", "0")
+	t.Setenv("GITINCOGNITOR_SYNC_DEBOUNCE_SECS", "0")
 	return home
 }
 

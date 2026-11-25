@@ -3,7 +3,7 @@ package ignore_test
 import (
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/ignore"
+	"github.com/glincker/gitincognitor/internal/ignore"
 )
 
 func TestMatchUsesGitSemantics(t *testing.T) {

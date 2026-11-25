@@ -1,4 +1,4 @@
-# gitincognito v0 spec
+# gitincognitor v0 spec
 
 Private notes that live inside any repo, never show up in it, and are backed up to a private remote you own. CLI only. OSS, MIT.
 
@@ -55,7 +55,7 @@ projects:
 
 ## Auto-sync (day 1)
 
-`sync --quiet` exits 0 to hooks, commits locally when the push fails, retries next run, and skips when the last sync is newer than `GITINCOGNITO_SYNC_DEBOUNCE_SECS`. Triggers: Claude Code Stop hook (agent-written notes) and a launchd timer (hand edits).
+`sync --quiet` exits 0 to hooks, commits locally when the push fails, retries next run, and skips when the last sync is newer than `GITINCOGNITOR_SYNC_DEBOUNCE_SECS`. Triggers: Claude Code Stop hook (agent-written notes) and a launchd timer (hand edits).
 
 ## Safety rules
 
@@ -67,12 +67,12 @@ projects:
 
 ## Agent integration
 
-- The `CLAUDE.local.md` pointer names `.incognito/`, the commands, and "run `git incognito sync` after writing notes".
+- The `CLAUDE.local.md` pointer names `.incognito/`, the commands, and "run `git incognitor sync` after writing notes".
 - No MCP server. JSON output from the CLI is the agent interface.
 
 ## Implementation
 
-- Go, single static binary `git-incognito` (so `git incognito ...` works). Shells out to `git`; requires git 2.42 or newer (`worktree add --orphan`).
+- Go, single static binary `git-incognitor` (so `git incognitor ...` works). Shells out to `git`; requires git 2.42 or newer (`worktree add --orphan`).
 - Layout: `cmd/`, `internal/{git,registry,store,project,guard}`.
 - Tests use temp repos and local bare remotes only. No network.
 

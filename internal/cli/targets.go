@@ -3,9 +3,9 @@ package cli
 import (
 	"fmt"
 
-	"github.com/glincker/gitincognito/internal/project"
-	"github.com/glincker/gitincognito/internal/registry"
-	"github.com/glincker/gitincognito/internal/store"
+	"github.com/glincker/gitincognitor/internal/project"
+	"github.com/glincker/gitincognitor/internal/registry"
+	"github.com/glincker/gitincognitor/internal/store"
 )
 
 // checkEntry rejects registry rows whose name or branch could escape into
@@ -35,5 +35,5 @@ func targets(c *Ctx, reg *registry.Registry, all bool) ([]registry.Project, erro
 			return []registry.Project{p}, nil
 		}
 	}
-	return nil, fmt.Errorf("%s is not linked, run: git incognito link", info.Root)
+	return nil, fmt.Errorf("%s is not linked, run: git incognitor link", info.Root)
 }

@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/glincker/gitincognito/internal/git"
+	"github.com/glincker/gitincognitor/internal/git"
 )
 
 type Info struct {
@@ -107,11 +107,11 @@ func RemoveExclude(root string, lines ...string) error {
 }
 
 const (
-	markStart   = "<!-- gitincognito:start -->"
-	markEnd     = "<!-- gitincognito:end -->"
+	markStart   = "<!-- gitincognitor:start -->"
+	markEnd     = "<!-- gitincognitor:end -->"
 	pointerBody = "Private notes live in `.incognito/` (not tracked by this repo).\n" +
-		"Read them for context and write new notes there, then run `git incognito sync`.\n" +
-		"Other commands: `git incognito status`, `git incognito doctor` (all accept --json).\n"
+		"Read them for context and write new notes there, then run `git incognitor sync`.\n" +
+		"Other commands: `git incognitor status`, `git incognitor doctor` (all accept --json).\n"
 )
 
 func pointerBlock() string { return markStart + "\n" + pointerBody + markEnd + "\n" }
@@ -159,18 +159,18 @@ func RemovePointer(root string) error {
 	return os.WriteFile(f, []byte(rest), 0o644)
 }
 
-const guardMark = "# gitincognito-guard"
+const guardMark = "# gitincognitor-guard"
 
 const preCommitBody = guardMark + `
 if git diff --cached --name-only | grep -q '^\.incognito/'; then
-  echo 'gitincognito: refusing to commit files under .incognito/' >&2
+  echo 'gitincognitor: refusing to commit files under .incognito/' >&2
   exit 1
 fi
 `
 
 const prePushBody = guardMark + `
 if [ -n "$(git ls-files .incognito)" ]; then
-  echo 'gitincognito: .incognito/ is tracked by this repo, refusing to push' >&2
+  echo 'gitincognitor: .incognito/ is tracked by this repo, refusing to push' >&2
   exit 1
 fi
 `

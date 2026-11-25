@@ -3,7 +3,7 @@ package provider_test
 import (
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/provider"
+	"github.com/glincker/gitincognitor/internal/provider"
 )
 
 func TestGitHubSlug(t *testing.T) {

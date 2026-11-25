@@ -3,8 +3,8 @@ package cli
 import (
 	"errors"
 
-	"github.com/glincker/gitincognito/internal/provider"
-	"github.com/glincker/gitincognito/internal/store"
+	"github.com/glincker/gitincognitor/internal/provider"
+	"github.com/glincker/gitincognitor/internal/store"
 )
 
 func init() { commands["init"] = cmdInit }

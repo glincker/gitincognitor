@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/glincker/gitincognito/internal/syncer"
+	"github.com/glincker/gitincognitor/internal/syncer"
 )
 
 func init() { commands["sync"] = cmdSync }

@@ -21,7 +21,7 @@ func GitHubSlug(remote string) (string, bool) {
 // CheckPrivate fails only when it can prove the remote is public. It cannot
 // verify non-GitHub remotes or hosts without `gh`, and then it allows them.
 func CheckPrivate(remote string) error {
-	if os.Getenv("GITINCOGNITO_SKIP_PRIVATE_CHECK") == "1" {
+	if os.Getenv("GITINCOGNITOR_SKIP_PRIVATE_CHECK") == "1" {
 		return nil
 	}
 	slug, ok := GitHubSlug(remote)

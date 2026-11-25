@@ -1,8 +1,8 @@
-# gitincognito v0 Implementation Plan
+# gitincognitor v0 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship the `git-incognito` CLI from `docs/v0-spec.md`: private notes hidden inside any repo, backed up to a private remote, restorable after a crash.
+**Goal:** Ship the `git-incognitor` CLI from `docs/v0-spec.md`: private notes hidden inside any repo, backed up to a private remote, restorable after a crash.
 
 **Architecture:** One Go binary shelling out to `git`. A central store repo holds one orphan branch per project, checked out as `<project>/.incognito/` via `git worktree add --orphan`. Hiding uses `.git/info/exclude`. Commands live in `internal/cli`, one file each, registered through a map. Domain logic lives in small packages (`git`, `registry`, `store`, `project`, `syncer`).
 
@@ -16,7 +16,7 @@
 
 | File | Responsibility |
 | --- | --- |
-| `cmd/git-incognito/main.go` | Entry point, calls `cli.Run` |
+| `cmd/git-incognitor/main.go` | Entry point, calls `cli.Run` |
 | `internal/git/git.go` | `Run`, `HasRef`, `Commit`, `Identity`, `MinVersionOK` |
 | `internal/testutil/testutil.go` | Test env, temp repos and bare remotes |
 | `internal/registry/registry.go` | Registry model, load, save, `~` handling |
@@ -38,11 +38,11 @@
 - [ ] **Step 1: Create the branch and worktree, then init the module**
 
 ```bash
-cd /Users/gdsks/G-Development/GLINRV6/gitincognito
-git worktree add ../gitincognito-wt -b feat/v0-engine docs/v0-spec
-cd ../gitincognito-wt
+cd /Users/gdsks/G-Development/GLINRV6/gitincognitor
+git worktree add ../gitincognitor-wt -b feat/v0-engine docs/v0-spec
+cd ../gitincognitor-wt
 go version   # expect go1.23 or newer
-go mod init github.com/glincker/gitincognito
+go mod init github.com/glincker/gitincognitor
 printf 'bin/\n' > .gitignore
 ```
 
@@ -54,8 +54,8 @@ package git_test
 import (
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/git"
-	"github.com/glincker/gitincognito/internal/testutil"
+	"github.com/glincker/gitincognitor/internal/git"
+	"github.com/glincker/gitincognitor/internal/testutil"
 )
 
 func TestRunAndHasRef(t *testing.T) {
@@ -160,7 +160,7 @@ func Identity(dir string) []string {
 	if e, _ := Run(dir, "config", "user.email"); e != "" {
 		return nil
 	}
-	return []string{"-c", "user.name=gitincognito", "-c", "user.email=gitincognito@localhost"}
+	return []string{"-c", "user.name=gitincognitor", "-c", "user.email=gitincognitor@localhost"}
 }
 
 func Commit(dir, msg string) error {
@@ -180,17 +180,17 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/git"
+	"github.com/glincker/gitincognitor/internal/git"
 )
 
-// Setup isolates git config and points GITINCOGNITO_HOME at a temp dir.
+// Setup isolates git config and points GITINCOGNITOR_HOME at a temp dir.
 func Setup(t *testing.T) string {
 	t.Helper()
 	home := filepath.Join(t.TempDir(), "home")
-	t.Setenv("GITINCOGNITO_HOME", home)
+	t.Setenv("GITINCOGNITOR_HOME", home)
 	t.Setenv("GIT_CONFIG_GLOBAL", os.DevNull)
 	t.Setenv("GIT_CONFIG_NOSYSTEM", "1")
-	t.Setenv("GITINCOGNITO_SYNC_DEBOUNCE_SECS", "0")
+	t.Setenv("GITINCOGNITOR_SYNC_DEBOUNCE_SECS", "0")
 	return home
 }
 
@@ -254,7 +254,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/registry"
+	"github.com/glincker/gitincognitor/internal/registry"
 )
 
 func TestRoundTripAndHomeShortening(t *testing.T) {
@@ -433,7 +433,7 @@ git add -A && git commit -m "feat: add registry with home path shortening"
 ### Task 3: Provider check, store, and `init`
 
 **Files:**
-- Create: `internal/provider/provider.go`, `internal/provider/provider_test.go`, `internal/store/store.go`, `internal/store/store_test.go`, `internal/cli/cli.go`, `internal/cli/init.go`, `internal/cli/helpers_test.go`, `internal/cli/init_test.go`, `cmd/git-incognito/main.go`
+- Create: `internal/provider/provider.go`, `internal/provider/provider_test.go`, `internal/store/store.go`, `internal/store/store_test.go`, `internal/cli/cli.go`, `internal/cli/init.go`, `internal/cli/helpers_test.go`, `internal/cli/init_test.go`, `cmd/git-incognitor/main.go`
 
 - [ ] **Step 1: Write failing tests**
 
@@ -445,7 +445,7 @@ package provider_test
 import (
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/provider"
+	"github.com/glincker/gitincognitor/internal/provider"
 )
 
 func TestGitHubSlug(t *testing.T) {
@@ -476,8 +476,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/store"
-	"github.com/glincker/gitincognito/internal/testutil"
+	"github.com/glincker/gitincognitor/internal/store"
+	"github.com/glincker/gitincognitor/internal/testutil"
 )
 
 func TestInitPushesSeedMainAndIsIdempotent(t *testing.T) {
@@ -536,8 +536,8 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/cli"
-	"github.com/glincker/gitincognito/internal/testutil"
+	"github.com/glincker/gitincognitor/internal/cli"
+	"github.com/glincker/gitincognitor/internal/testutil"
 )
 
 func run(t *testing.T, cwd string, args ...string) (int, string) {
@@ -572,7 +572,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/testutil"
+	"github.com/glincker/gitincognitor/internal/testutil"
 )
 
 func TestInitRequiresRemote(t *testing.T) {
@@ -624,7 +624,7 @@ func GitHubSlug(remote string) (string, bool) {
 // CheckPrivate fails only when it can prove the remote is public. It cannot
 // verify non-GitHub remotes or hosts without `gh`, and then it allows them.
 func CheckPrivate(remote string) error {
-	if os.Getenv("GITINCOGNITO_SKIP_PRIVATE_CHECK") == "1" {
+	if os.Getenv("GITINCOGNITOR_SKIP_PRIVATE_CHECK") == "1" {
 		return nil
 	}
 	slug, ok := GitHubSlug(remote)
@@ -654,7 +654,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/glincker/gitincognito/internal/git"
+	"github.com/glincker/gitincognitor/internal/git"
 )
 
 func CentralDir(home string) string { return filepath.Join(home, "store") }
@@ -759,7 +759,7 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/glincker/gitincognito/internal/git"
+	"github.com/glincker/gitincognitor/internal/git"
 )
 
 type Ctx struct {
@@ -781,7 +781,7 @@ func (e *UnsafeError) Error() string { return e.Msg }
 func Unsafe(format string, a ...any) error { return &UnsafeError{Msg: fmt.Sprintf(format, a...)} }
 
 func Home() string {
-	if h := os.Getenv("GITINCOGNITO_HOME"); h != "" {
+	if h := os.Getenv("GITINCOGNITOR_HOME"); h != "" {
 		return h
 	}
 	u, _ := os.UserHomeDir()
@@ -825,7 +825,7 @@ func (c *Ctx) usage() int {
 		names = append(names, n)
 	}
 	sort.Strings(names)
-	fmt.Fprintf(c.Err, "usage: git incognito <command> [--json]\ncommands: %v\n", names)
+	fmt.Fprintf(c.Err, "usage: git incognitor <command> [--json]\ncommands: %v\n", names)
 	return 1
 }
 
@@ -867,8 +867,8 @@ package cli
 import (
 	"errors"
 
-	"github.com/glincker/gitincognito/internal/provider"
-	"github.com/glincker/gitincognito/internal/store"
+	"github.com/glincker/gitincognitor/internal/provider"
+	"github.com/glincker/gitincognitor/internal/store"
 )
 
 func init() { commands["init"] = cmdInit }
@@ -894,7 +894,7 @@ func cmdInit(c *Ctx, args []string) error {
 }
 ```
 
-- [ ] **Step 7: Implement** `cmd/git-incognito/main.go`
+- [ ] **Step 7: Implement** `cmd/git-incognitor/main.go`
 
 ```go
 package main
@@ -902,7 +902,7 @@ package main
 import (
 	"os"
 
-	"github.com/glincker/gitincognito/internal/cli"
+	"github.com/glincker/gitincognitor/internal/cli"
 )
 
 func main() { os.Exit(cli.Run(os.Args[1:], os.Stdout, os.Stderr)) }
@@ -939,9 +939,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/git"
-	"github.com/glincker/gitincognito/internal/project"
-	"github.com/glincker/gitincognito/internal/testutil"
+	"github.com/glincker/gitincognitor/internal/git"
+	"github.com/glincker/gitincognitor/internal/project"
+	"github.com/glincker/gitincognitor/internal/testutil"
 )
 
 func TestExcludeIdempotentAndRemovable(t *testing.T) {
@@ -978,14 +978,14 @@ func TestPointerUpsertKeepsUserContent(t *testing.T) {
 	}
 	b, _ := os.ReadFile(f)
 	s := string(b)
-	if !strings.Contains(s, "my own notes") || strings.Count(s, "gitincognito:start") != 1 {
+	if !strings.Contains(s, "my own notes") || strings.Count(s, "gitincognitor:start") != 1 {
 		t.Fatalf("bad pointer file:\n%s", s)
 	}
 	if err := project.RemovePointer(root); err != nil {
 		t.Fatal(err)
 	}
 	b, _ = os.ReadFile(f)
-	if strings.Contains(string(b), "gitincognito") || !strings.Contains(string(b), "my own notes") {
+	if strings.Contains(string(b), "gitincognitor") || !strings.Contains(string(b), "my own notes") {
 		t.Fatalf("remove damaged file:\n%s", b)
 	}
 }
@@ -1037,10 +1037,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/project"
-	"github.com/glincker/gitincognito/internal/registry"
-	"github.com/glincker/gitincognito/internal/store"
-	"github.com/glincker/gitincognito/internal/testutil"
+	"github.com/glincker/gitincognitor/internal/project"
+	"github.com/glincker/gitincognitor/internal/registry"
+	"github.com/glincker/gitincognitor/internal/store"
+	"github.com/glincker/gitincognitor/internal/testutil"
 )
 
 func TestLinkHidesNotesAndRegisters(t *testing.T) {
@@ -1055,7 +1055,7 @@ func TestLinkHidesNotesAndRegisters(t *testing.T) {
 		t.Fatal("exclude entries missing")
 	}
 	b, _ := os.ReadFile(filepath.Join(proj, "CLAUDE.local.md"))
-	if !strings.Contains(string(b), "gitincognito:start") {
+	if !strings.Contains(string(b), "gitincognitor:start") {
 		t.Fatal("pointer missing")
 	}
 	reg, _ := registry.Load(store.RegistryPath(home))
@@ -1129,7 +1129,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/glincker/gitincognito/internal/git"
+	"github.com/glincker/gitincognitor/internal/git"
 )
 
 type Info struct {
@@ -1229,11 +1229,11 @@ func RemoveExclude(root string, lines ...string) error {
 }
 
 const (
-	markStart   = "<!-- gitincognito:start -->"
-	markEnd     = "<!-- gitincognito:end -->"
+	markStart   = "<!-- gitincognitor:start -->"
+	markEnd     = "<!-- gitincognitor:end -->"
 	pointerBody = "Private notes live in `.incognito/` (not tracked by this repo).\n" +
-		"Read them for context and write new notes there, then run `git incognito sync`.\n" +
-		"Other commands: `git incognito status`, `git incognito doctor` (all accept --json).\n"
+		"Read them for context and write new notes there, then run `git incognitor sync`.\n" +
+		"Other commands: `git incognitor status`, `git incognitor doctor` (all accept --json).\n"
 )
 
 func pointerBlock() string { return markStart + "\n" + pointerBody + markEnd + "\n" }
@@ -1281,18 +1281,18 @@ func RemovePointer(root string) error {
 	return os.WriteFile(f, []byte(rest), 0o644)
 }
 
-const guardMark = "# gitincognito-guard"
+const guardMark = "# gitincognitor-guard"
 
 const preCommitBody = guardMark + `
 if git diff --cached --name-only | grep -q '^\.incognito/'; then
-  echo 'gitincognito: refusing to commit files under .incognito/' >&2
+  echo 'gitincognitor: refusing to commit files under .incognito/' >&2
   exit 1
 fi
 `
 
 const prePushBody = guardMark + `
 if [ -n "$(git ls-files .incognito)" ]; then
-  echo 'gitincognito: .incognito/ is tracked by this repo, refusing to push' >&2
+  echo 'gitincognitor: .incognito/ is tracked by this repo, refusing to push' >&2
   exit 1
 fi
 `
@@ -1362,10 +1362,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/glincker/gitincognito/internal/project"
-	"github.com/glincker/gitincognito/internal/provider"
-	"github.com/glincker/gitincognito/internal/registry"
-	"github.com/glincker/gitincognito/internal/store"
+	"github.com/glincker/gitincognitor/internal/project"
+	"github.com/glincker/gitincognitor/internal/provider"
+	"github.com/glincker/gitincognitor/internal/registry"
+	"github.com/glincker/gitincognitor/internal/store"
 )
 
 func init() { commands["link"] = cmdLink }
@@ -1405,7 +1405,7 @@ func linkProject(c *Ctx, o linkOpts) (registry.Project, error) {
 	case "central":
 		dir = store.CentralDir(c.Home)
 		if !store.Exists(dir) {
-			return registry.Project{}, errors.New("no store yet, run: git incognito init --remote <url>")
+			return registry.Project{}, errors.New("no store yet, run: git incognitor init --remote <url>")
 		}
 		notesRemote = store.Remote(dir)
 	case "dedicated":
@@ -1424,14 +1424,14 @@ func linkProject(c *Ctx, o linkOpts) (registry.Project, error) {
 		return registry.Project{}, Unsafe("notes remote %s is also a remote of this project", notesRemote)
 	}
 	if o.Store == "dedicated" {
-		if err := store.Init(dir, o.Remote, ".gitincognito", "dedicated notes store\n"); err != nil {
+		if err := store.Init(dir, o.Remote, ".gitincognitor", "dedicated notes store\n"); err != nil {
 			return registry.Project{}, err
 		}
 	}
 	wt := filepath.Join(info.Root, ".incognito")
 	if _, err := os.Stat(wt); err == nil {
 		if _, err := os.Stat(filepath.Join(wt, ".git")); err != nil {
-			return registry.Project{}, Unsafe(".incognito exists and is not a notes worktree, use: git incognito adopt")
+			return registry.Project{}, Unsafe(".incognito exists and is not a notes worktree, use: git incognitor adopt")
 		}
 	} else if err := store.AddWorktree(dir, store.Branch(name), wt); err != nil {
 		return registry.Project{}, err
@@ -1492,7 +1492,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/testutil"
+	"github.com/glincker/gitincognitor/internal/testutil"
 )
 
 func writeNote(t *testing.T, proj, name, body string) {
@@ -1525,7 +1525,7 @@ func TestSyncNoopWhenClean(t *testing.T) {
 
 func TestSyncDebounce(t *testing.T) {
 	_, _, proj := linked(t)
-	t.Setenv("GITINCOGNITO_SYNC_DEBOUNCE_SECS", "3600")
+	t.Setenv("GITINCOGNITOR_SYNC_DEBOUNCE_SECS", "3600")
 	writeNote(t, proj, "a.md", "one")
 	run(t, proj, "sync")
 	writeNote(t, proj, "b.md", "two")
@@ -1585,8 +1585,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/glincker/gitincognito/internal/git"
-	"github.com/glincker/gitincognito/internal/registry"
+	"github.com/glincker/gitincognitor/internal/git"
+	"github.com/glincker/gitincognitor/internal/registry"
 )
 
 type Result struct {
@@ -1600,7 +1600,7 @@ type Result struct {
 // DebounceFromEnv reads the minimum gap between syncs. Default 60 seconds.
 func DebounceFromEnv() time.Duration {
 	secs := 60
-	if v := os.Getenv("GITINCOGNITO_SYNC_DEBOUNCE_SECS"); v != "" {
+	if v := os.Getenv("GITINCOGNITOR_SYNC_DEBOUNCE_SECS"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil && n >= 0 {
 			secs = n
 		}
@@ -1685,9 +1685,9 @@ package cli
 import (
 	"fmt"
 
-	"github.com/glincker/gitincognito/internal/project"
-	"github.com/glincker/gitincognito/internal/registry"
-	"github.com/glincker/gitincognito/internal/store"
+	"github.com/glincker/gitincognitor/internal/project"
+	"github.com/glincker/gitincognitor/internal/registry"
+	"github.com/glincker/gitincognitor/internal/store"
 )
 
 func loadRegistry(c *Ctx) (*registry.Registry, error) {
@@ -1705,7 +1705,7 @@ func targets(c *Ctx, reg *registry.Registry, all bool) ([]registry.Project, erro
 			return []registry.Project{p}, nil
 		}
 	}
-	return nil, fmt.Errorf("%s is not linked, run: git incognito link", info.Root)
+	return nil, fmt.Errorf("%s is not linked, run: git incognitor link", info.Root)
 }
 ```
 
@@ -1720,7 +1720,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/glincker/gitincognito/internal/syncer"
+	"github.com/glincker/gitincognitor/internal/syncer"
 )
 
 func init() { commands["sync"] = cmdSync }
@@ -1797,8 +1797,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/project"
-	"github.com/glincker/gitincognito/internal/testutil"
+	"github.com/glincker/gitincognitor/internal/project"
+	"github.com/glincker/gitincognitor/internal/testutil"
 )
 
 // Crash drill: lose the store and the project's .git, then get the notes back.
@@ -1870,9 +1870,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/glincker/gitincognito/internal/project"
-	"github.com/glincker/gitincognito/internal/registry"
-	"github.com/glincker/gitincognito/internal/store"
+	"github.com/glincker/gitincognitor/internal/project"
+	"github.com/glincker/gitincognitor/internal/registry"
+	"github.com/glincker/gitincognitor/internal/store"
 )
 
 func init() { commands["restore"] = cmdRestore }
@@ -1984,7 +1984,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/project"
+	"github.com/glincker/gitincognitor/internal/project"
 )
 
 func TestStatusReportsDirtyAndAhead(t *testing.T) {
@@ -2047,8 +2047,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/glincker/gitincognito/internal/git"
-	"github.com/glincker/gitincognito/internal/syncer"
+	"github.com/glincker/gitincognitor/internal/git"
+	"github.com/glincker/gitincognitor/internal/syncer"
 )
 
 func init() { commands["status"] = cmdStatus }
@@ -2110,9 +2110,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/glincker/gitincognito/internal/git"
-	"github.com/glincker/gitincognito/internal/project"
-	"github.com/glincker/gitincognito/internal/store"
+	"github.com/glincker/gitincognitor/internal/git"
+	"github.com/glincker/gitincognitor/internal/project"
+	"github.com/glincker/gitincognitor/internal/store"
 )
 
 func init() { commands["doctor"] = cmdDoctor }
@@ -2145,7 +2145,7 @@ func cmdDoctor(c *Ctx, args []string) error {
 			continue
 		}
 		if _, err := os.Stat(filepath.Join(wt, ".git")); err != nil {
-			add(p.Name, "linked", "fail", ".incognito is not a notes worktree, run: git incognito restore")
+			add(p.Name, "linked", "fail", ".incognito is not a notes worktree, run: git incognitor restore")
 			continue
 		}
 		add(p.Name, "linked", "ok", "")
@@ -2230,7 +2230,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/testutil"
+	"github.com/glincker/gitincognitor/internal/testutil"
 )
 
 func TestAdoptMovesFolderIntoNotes(t *testing.T) {
@@ -2320,9 +2320,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/glincker/gitincognito/internal/git"
-	"github.com/glincker/gitincognito/internal/project"
-	"github.com/glincker/gitincognito/internal/syncer"
+	"github.com/glincker/gitincognitor/internal/git"
+	"github.com/glincker/gitincognitor/internal/project"
+	"github.com/glincker/gitincognitor/internal/syncer"
 )
 
 func init() { commands["adopt"] = cmdAdopt }
@@ -2336,7 +2336,7 @@ func cmdAdopt(c *Ctx, args []string) error {
 		return err
 	}
 	if fs.NArg() != 1 {
-		return errors.New("usage: git incognito adopt <folder>")
+		return errors.New("usage: git incognitor adopt <folder>")
 	}
 	src := fs.Arg(0)
 	if !filepath.IsAbs(src) {
@@ -2405,10 +2405,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/project"
-	"github.com/glincker/gitincognito/internal/registry"
-	"github.com/glincker/gitincognito/internal/store"
-	"github.com/glincker/gitincognito/internal/testutil"
+	"github.com/glincker/gitincognitor/internal/project"
+	"github.com/glincker/gitincognitor/internal/registry"
+	"github.com/glincker/gitincognitor/internal/store"
+	"github.com/glincker/gitincognitor/internal/testutil"
 )
 
 func TestUnlinkRemovesWorktreeKeepsBranch(t *testing.T) {
@@ -2458,9 +2458,9 @@ package cli
 import (
 	"path/filepath"
 
-	"github.com/glincker/gitincognito/internal/git"
-	"github.com/glincker/gitincognito/internal/project"
-	"github.com/glincker/gitincognito/internal/store"
+	"github.com/glincker/gitincognitor/internal/git"
+	"github.com/glincker/gitincognitor/internal/project"
+	"github.com/glincker/gitincognitor/internal/store"
 )
 
 func init() { commands["unlink"] = cmdUnlink }
@@ -2543,7 +2543,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/testutil"
+	"github.com/glincker/gitincognitor/internal/testutil"
 )
 
 func TestHooksInstallMergesStopHookIdempotently(t *testing.T) {
@@ -2623,7 +2623,7 @@ func init() { commands["hooks"] = cmdHooks }
 
 // timerSecs is the launchd interval, overridable for people who want it tighter.
 func timerSecs() int {
-	if n, err := strconv.Atoi(os.Getenv("GITINCOGNITO_TIMER_SECS")); err == nil && n > 0 {
+	if n, err := strconv.Atoi(os.Getenv("GITINCOGNITOR_TIMER_SECS")); err == nil && n > 0 {
 		return n
 	}
 	return 900
@@ -2631,7 +2631,7 @@ func timerSecs() int {
 
 func cmdHooks(c *Ctx, args []string) error {
 	if len(args) == 0 || args[0] != "install" {
-		return errors.New("usage: git incognito hooks install [--claude] [--launchd] [--print]")
+		return errors.New("usage: git incognitor hooks install [--claude] [--launchd] [--print]")
 	}
 	fs := c.flags("hooks install")
 	claude := fs.Bool("claude", false, "add a Claude Code Stop hook")
@@ -2639,7 +2639,7 @@ func cmdHooks(c *Ctx, args []string) error {
 	dry := fs.Bool("print", false, "show what would change, write nothing")
 	home, _ := os.UserHomeDir()
 	settings := fs.String("settings", filepath.Join(home, ".claude", "settings.json"), "Claude settings path")
-	plist := fs.String("plist", filepath.Join(home, "Library", "LaunchAgents", "dev.glincker.gitincognito.plist"), "plist path")
+	plist := fs.String("plist", filepath.Join(home, "Library", "LaunchAgents", "dev.glincker.gitincognitor.plist"), "plist path")
 	if err := fs.Parse(args[1:]); err != nil {
 		return err
 	}
@@ -2720,7 +2720,7 @@ func plistBody(bin string) string {
 	return fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
-<key>Label</key><string>dev.glincker.gitincognito</string>
+<key>Label</key><string>dev.glincker.gitincognitor</string>
 <key>ProgramArguments</key><array><string>%s</string><string>sync</string><string>--quiet</string><string>--all</string></array>
 <key>StartInterval</key><integer>%d</integer>
 <key>RunAtLoad</key><true/>
@@ -2768,7 +2768,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/testutil"
+	"github.com/glincker/gitincognitor/internal/testutil"
 )
 
 // Whole story: init, adopt existing notes, crash, restore, doctor is green.
@@ -2809,7 +2809,7 @@ Expected: PASS.
 
 - [ ] **Step 3: Write `LICENSE`** (MIT, copyright "GLINCKER"), `README.md`, and CI
 
-`README.md` content: one paragraph on the problem, a five-line quickstart (`git incognito init --remote <private-url>`, `cd project && git incognito link`, `git incognito adopt docs-local`, `git incognito sync`, `git incognito restore --all --remote <url>`), the command table from the spec, the safety rules, and the requirement "git 2.42 or newer". Keep it under 80 lines, no dashes of any kind.
+`README.md` content: one paragraph on the problem, a five-line quickstart (`git incognitor init --remote <private-url>`, `cd project && git incognitor link`, `git incognitor adopt docs-local`, `git incognitor sync`, `git incognitor restore --all --remote <url>`), the command table from the spec, the safety rules, and the requirement "git 2.42 or newer". Keep it under 80 lines, no dashes of any kind.
 
 `.github/workflows/ci.yml`:
 
@@ -2834,19 +2834,19 @@ jobs:
 
 - [ ] **Step 4: Full verification**
 
-Run: `go vet ./... && go test ./... && go build -o bin/git-incognito ./cmd/git-incognito && grep -rnP '[\x{2013}\x{2014}]' . --include='*.go' --include='*.md' --include='*.yml' || echo "no dashes"`
+Run: `go vet ./... && go test ./... && go build -o bin/git-incognitor ./cmd/git-incognitor && grep -rnP '[\x{2013}\x{2014}]' . --include='*.go' --include='*.md' --include='*.yml' || echo "no dashes"`
 Expected: tests PASS, binary builds, "no dashes".
 
 - [ ] **Step 5: Dogfood check (read only against real data)**
 
-Do not run `adopt` on the real `docs-local` inside this task. After the plan is merged and the private store remote exists, the owner runs `git incognito init --remote <private-url>`, then `cd ~/G-Development/GLINRV6 && git incognito adopt docs-local`, which works because the workspace folder is a plain folder.
+Do not run `adopt` on the real `docs-local` inside this task. After the plan is merged and the private store remote exists, the owner runs `git incognitor init --remote <private-url>`, then `cd ~/G-Development/GLINRV6 && git incognitor adopt docs-local`, which works because the workspace folder is a plain folder.
 
 - [ ] **Step 6: Commit, push the branch, remove the worktree**
 
 ```bash
 git add -A && git commit -m "feat: add README, license, CI and end-to-end drill"
 git push -u origin feat/v0-engine
-cd ../gitincognito && git worktree remove ../gitincognito-wt && git worktree prune
+cd ../gitincognitor && git worktree remove ../gitincognitor-wt && git worktree prune
 ```
 
 Do not open a PR until the owner says so.
@@ -2864,7 +2864,7 @@ Do not open a PR until the owner says so.
 | `link`, idempotent, pointer, registry | 4 |
 | `adopt` (copy, verify push, then delete) | 8 |
 | `sync`, never force-push, no-op when clean | 5 |
-| Auto-sync: quiet, debounce env, retry | 5 (`--quiet`, `GITINCOGNITO_SYNC_DEBOUNCE_SECS`) |
+| Auto-sync: quiet, debounce env, retry | 5 (`--quiet`, `GITINCOGNITOR_SYNC_DEBOUNCE_SECS`) |
 | `restore` (clone store, rebuild worktrees, prune) | 6 |
 | `status`, `doctor` (excluded, untracked, shared remote, `.env` warn) | 7 |
 | `unlink` keeps branch | 9 |

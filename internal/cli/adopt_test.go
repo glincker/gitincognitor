@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/testutil"
+	"github.com/glincker/gitincognitor/internal/testutil"
 )
 
 func TestAdoptMovesFolderIntoNotes(t *testing.T) {

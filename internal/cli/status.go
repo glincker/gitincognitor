@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/glincker/gitincognito/internal/git"
-	"github.com/glincker/gitincognito/internal/syncer"
+	"github.com/glincker/gitincognitor/internal/git"
+	"github.com/glincker/gitincognitor/internal/syncer"
 )
 
 func init() { commands["status"] = cmdStatus }

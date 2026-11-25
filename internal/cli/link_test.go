@@ -6,10 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/project"
-	"github.com/glincker/gitincognito/internal/registry"
-	"github.com/glincker/gitincognito/internal/store"
-	"github.com/glincker/gitincognito/internal/testutil"
+	"github.com/glincker/gitincognitor/internal/project"
+	"github.com/glincker/gitincognitor/internal/registry"
+	"github.com/glincker/gitincognitor/internal/store"
+	"github.com/glincker/gitincognitor/internal/testutil"
 )
 
 func TestLinkHidesNotesAndRegisters(t *testing.T) {
@@ -24,7 +24,7 @@ func TestLinkHidesNotesAndRegisters(t *testing.T) {
 		t.Fatal("exclude entries missing")
 	}
 	b, _ := os.ReadFile(filepath.Join(proj, "CLAUDE.local.md"))
-	if !strings.Contains(string(b), "gitincognito:start") {
+	if !strings.Contains(string(b), "gitincognitor:start") {
 		t.Fatal("pointer missing")
 	}
 	reg, _ := registry.Load(store.RegistryPath(home))

@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/registry"
-	"github.com/glincker/gitincognito/internal/store"
-	"github.com/glincker/gitincognito/internal/testutil"
+	"github.com/glincker/gitincognitor/internal/registry"
+	"github.com/glincker/gitincognitor/internal/store"
+	"github.com/glincker/gitincognitor/internal/testutil"
 )
 
 func TestLinkRefusesTrackedPointerFile(t *testing.T) {

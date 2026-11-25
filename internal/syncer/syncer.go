@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/glincker/gitincognito/internal/git"
-	"github.com/glincker/gitincognito/internal/registry"
+	"github.com/glincker/gitincognitor/internal/git"
+	"github.com/glincker/gitincognitor/internal/registry"
 )
 
 type Result struct {
@@ -22,7 +22,7 @@ type Result struct {
 // DebounceFromEnv reads the minimum gap between syncs. Default 60 seconds.
 func DebounceFromEnv() time.Duration {
 	secs := 60
-	if v := os.Getenv("GITINCOGNITO_SYNC_DEBOUNCE_SECS"); v != "" {
+	if v := os.Getenv("GITINCOGNITOR_SYNC_DEBOUNCE_SECS"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil && n >= 0 {
 			secs = n
 		}

@@ -16,7 +16,7 @@ func init() { commands["hooks"] = cmdHooks }
 
 // timerSecs is the launchd interval, overridable for people who want it tighter.
 func timerSecs() int {
-	if n, err := strconv.Atoi(os.Getenv("GITINCOGNITO_TIMER_SECS")); err == nil && n > 0 {
+	if n, err := strconv.Atoi(os.Getenv("GITINCOGNITOR_TIMER_SECS")); err == nil && n > 0 {
 		return n
 	}
 	return 900
@@ -24,7 +24,7 @@ func timerSecs() int {
 
 func cmdHooks(c *Ctx, args []string) error {
 	if len(args) == 0 || args[0] != "install" {
-		return errors.New("usage: git incognito hooks install [--claude] [--launchd] [--print]")
+		return errors.New("usage: git incognitor hooks install [--claude] [--launchd] [--print]")
 	}
 	fs := c.flags("hooks install")
 	claude := fs.Bool("claude", false, "add a Claude Code Stop hook")
@@ -32,7 +32,7 @@ func cmdHooks(c *Ctx, args []string) error {
 	dry := fs.Bool("print", false, "show what would change, write nothing")
 	home, _ := os.UserHomeDir()
 	settings := fs.String("settings", filepath.Join(home, ".claude", "settings.json"), "Claude settings path")
-	plist := fs.String("plist", filepath.Join(home, "Library", "LaunchAgents", "dev.glincker.gitincognito.plist"), "plist path")
+	plist := fs.String("plist", filepath.Join(home, "Library", "LaunchAgents", "dev.glincker.gitincognitor.plist"), "plist path")
 	if err := fs.Parse(args[1:]); err != nil {
 		return err
 	}
@@ -43,7 +43,7 @@ func cmdHooks(c *Ctx, args []string) error {
 	if err != nil {
 		return err
 	}
-	cmd := hookCommand(bin, os.Getenv("GITINCOGNITO_HOME"))
+	cmd := hookCommand(bin, os.Getenv("GITINCOGNITOR_HOME"))
 	var done []string
 	if *claude {
 		msg, err := installClaudeHook(*settings, cmd, *dry)
@@ -53,7 +53,7 @@ func cmdHooks(c *Ctx, args []string) error {
 		done = append(done, msg)
 	}
 	if *launchd {
-		body := plistBody(bin, os.Getenv("GITINCOGNITO_HOME"))
+		body := plistBody(bin, os.Getenv("GITINCOGNITOR_HOME"))
 		if *dry {
 			done = append(done, "would write "+*plist)
 		} else {
@@ -72,12 +72,12 @@ func cmdHooks(c *Ctx, args []string) error {
 
 func shQuote(s string) string { return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'" }
 
-// hookCommand quotes the binary and carries GITINCOGNITO_HOME so the hook
+// hookCommand quotes the binary and carries GITINCOGNITOR_HOME so the hook
 // syncs the same store the user installed it from.
 func hookCommand(bin, home string) string {
 	prefix := ""
 	if home != "" {
-		prefix = "GITINCOGNITO_HOME=" + shQuote(home) + " "
+		prefix = "GITINCOGNITOR_HOME=" + shQuote(home) + " "
 	}
 	return prefix + shQuote(bin) + " sync --quiet --all"
 }
@@ -85,7 +85,7 @@ func hookCommand(bin, home string) string {
 // writeAtomic writes via a temp file in the same dir so a crash never leaves a
 // half-written settings file.
 func writeAtomic(path string, data []byte, mode os.FileMode) error {
-	tmp, err := os.CreateTemp(filepath.Dir(path), ".gitincognito-*")
+	tmp, err := os.CreateTemp(filepath.Dir(path), ".gitincognitor-*")
 	if err != nil {
 		return err
 	}
@@ -167,12 +167,12 @@ func xmlEsc(s string) string {
 func plistBody(bin, home string) string {
 	env := ""
 	if home != "" {
-		env = "<key>EnvironmentVariables</key><dict><key>GITINCOGNITO_HOME</key><string>" + xmlEsc(home) + "</string></dict>\n"
+		env = "<key>EnvironmentVariables</key><dict><key>GITINCOGNITOR_HOME</key><string>" + xmlEsc(home) + "</string></dict>\n"
 	}
 	return fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
-<key>Label</key><string>dev.glincker.gitincognito</string>
+<key>Label</key><string>dev.glincker.gitincognitor</string>
 <key>ProgramArguments</key><array><string>%s</string><string>sync</string><string>--quiet</string><string>--all</string></array>
 %s<key>StartInterval</key><integer>%d</integer>
 <key>RunAtLoad</key><true/>

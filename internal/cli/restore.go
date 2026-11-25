@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/glincker/gitincognito/internal/project"
-	"github.com/glincker/gitincognito/internal/registry"
-	"github.com/glincker/gitincognito/internal/store"
+	"github.com/glincker/gitincognitor/internal/project"
+	"github.com/glincker/gitincognitor/internal/registry"
+	"github.com/glincker/gitincognitor/internal/store"
 )
 
 func init() { commands["restore"] = cmdRestore }

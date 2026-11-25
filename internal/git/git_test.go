@@ -3,8 +3,8 @@ package git_test
 import (
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/git"
-	"github.com/glincker/gitincognito/internal/testutil"
+	"github.com/glincker/gitincognitor/internal/git"
+	"github.com/glincker/gitincognitor/internal/testutil"
 )
 
 func TestRunAndHasRef(t *testing.T) {

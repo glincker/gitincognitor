@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/glincker/gitincognito/internal/ignore"
+	"github.com/glincker/gitincognitor/internal/ignore"
 )
 
 const ignoreFileName = ".incognitoignore"

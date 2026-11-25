@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/testutil"
+	"github.com/glincker/gitincognitor/internal/testutil"
 )
 
 func exists(p string) bool { _, err := os.Lstat(p); return err == nil }

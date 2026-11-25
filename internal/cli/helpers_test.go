@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/cli"
-	"github.com/glincker/gitincognito/internal/testutil"
+	"github.com/glincker/gitincognitor/internal/cli"
+	"github.com/glincker/gitincognitor/internal/testutil"
 )
 
 func run(t *testing.T, cwd string, args ...string) (int, string) {

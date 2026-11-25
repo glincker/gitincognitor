@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/registry"
+	"github.com/glincker/gitincognitor/internal/registry"
 )
 
 func TestRoundTripAndHomeShortening(t *testing.T) {

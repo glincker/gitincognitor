@@ -6,8 +6,8 @@ import (
 )
 
 func TestHookCommandQuotesBinaryAndHome(t *testing.T) {
-	got := hookCommand("/opt/my tools/it's/git-incognito", "/h o/me")
-	want := `GITINCOGNITO_HOME='/h o/me' '/opt/my tools/it'\''s/git-incognito' sync --quiet --all`
+	got := hookCommand("/opt/my tools/it's/git-incognitor", "/h o/me")
+	want := `GITINCOGNITOR_HOME='/h o/me' '/opt/my tools/it'\''s/git-incognitor' sync --quiet --all`
 	if got != want {
 		t.Fatalf("got  %s\nwant %s", got, want)
 	}

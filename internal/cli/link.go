@@ -5,10 +5,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/glincker/gitincognito/internal/project"
-	"github.com/glincker/gitincognito/internal/provider"
-	"github.com/glincker/gitincognito/internal/registry"
-	"github.com/glincker/gitincognito/internal/store"
+	"github.com/glincker/gitincognitor/internal/project"
+	"github.com/glincker/gitincognitor/internal/provider"
+	"github.com/glincker/gitincognitor/internal/registry"
+	"github.com/glincker/gitincognitor/internal/store"
 )
 
 func init() { commands["link"] = cmdLink }
@@ -61,7 +61,7 @@ func linkProject(c *Ctx, o linkOpts) (registry.Project, error) {
 	case "central":
 		dir = store.CentralDir(c.Home)
 		if !store.Exists(dir) {
-			return registry.Project{}, errors.New("no store yet, run: git incognito init --remote <url>")
+			return registry.Project{}, errors.New("no store yet, run: git incognitor init --remote <url>")
 		}
 		notesRemote = store.Remote(dir)
 	case "dedicated":
@@ -86,14 +86,14 @@ func linkProject(c *Ctx, o linkOpts) (registry.Project, error) {
 		if store.Exists(dir) && store.Remote(dir) != o.Remote {
 			return registry.Project{}, Unsafe("dedicated store for %s already uses remote %s", name, store.Remote(dir))
 		}
-		if err := store.Init(dir, o.Remote, ".gitincognito", "dedicated notes store\n"); err != nil {
+		if err := store.Init(dir, o.Remote, ".gitincognitor", "dedicated notes store\n"); err != nil {
 			return registry.Project{}, err
 		}
 	}
 	wt := filepath.Join(info.Root, ".incognito")
 	if _, err := os.Stat(wt); err == nil {
 		if _, err := os.Stat(filepath.Join(wt, ".git")); err != nil {
-			return registry.Project{}, Unsafe(".incognito exists and is not a notes worktree, use: git incognito adopt")
+			return registry.Project{}, Unsafe(".incognito exists and is not a notes worktree, use: git incognitor adopt")
 		}
 	} else if err := store.AddWorktree(dir, store.Branch(name), wt, true); err != nil {
 		return registry.Project{}, err

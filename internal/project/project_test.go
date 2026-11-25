@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/git"
-	"github.com/glincker/gitincognito/internal/project"
-	"github.com/glincker/gitincognito/internal/testutil"
+	"github.com/glincker/gitincognitor/internal/git"
+	"github.com/glincker/gitincognitor/internal/project"
+	"github.com/glincker/gitincognitor/internal/testutil"
 )
 
 func TestExcludeIdempotentAndRemovable(t *testing.T) {
@@ -45,14 +45,14 @@ func TestPointerUpsertKeepsUserContent(t *testing.T) {
 	}
 	b, _ := os.ReadFile(f)
 	s := string(b)
-	if !strings.Contains(s, "my own notes") || strings.Count(s, "gitincognito:start") != 1 {
+	if !strings.Contains(s, "my own notes") || strings.Count(s, "gitincognitor:start") != 1 {
 		t.Fatalf("bad pointer file:\n%s", s)
 	}
 	if err := project.RemovePointer(root); err != nil {
 		t.Fatal(err)
 	}
 	b, _ = os.ReadFile(f)
-	if strings.Contains(string(b), "gitincognito") || !strings.Contains(string(b), "my own notes") {
+	if strings.Contains(string(b), "gitincognitor") || !strings.Contains(string(b), "my own notes") {
 		t.Fatalf("remove damaged file:\n%s", b)
 	}
 }

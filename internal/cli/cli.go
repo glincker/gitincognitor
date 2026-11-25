@@ -11,7 +11,7 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/glincker/gitincognito/internal/git"
+	"github.com/glincker/gitincognitor/internal/git"
 )
 
 type Ctx struct {
@@ -38,7 +38,7 @@ func (e quietExit) Error() string { return "exit " + strconv.Itoa(e.code) }
 func Unsafe(format string, a ...any) error { return &UnsafeError{Msg: fmt.Sprintf(format, a...)} }
 
 func Home() string {
-	if h := os.Getenv("GITINCOGNITO_HOME"); h != "" {
+	if h := os.Getenv("GITINCOGNITOR_HOME"); h != "" {
 		return h
 	}
 	u, _ := os.UserHomeDir()
@@ -82,7 +82,7 @@ func (c *Ctx) usage() int {
 		names = append(names, n)
 	}
 	sort.Strings(names)
-	fmt.Fprintf(c.Err, "usage: git incognito <command> [--json]\ncommands: %v\n", names)
+	fmt.Fprintf(c.Err, "usage: git incognitor <command> [--json]\ncommands: %v\n", names)
 	return 1
 }
 

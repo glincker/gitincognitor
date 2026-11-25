@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/project"
+	"github.com/glincker/gitincognitor/internal/project"
 )
 
 func TestStatusReportsDirtyAndAhead(t *testing.T) {

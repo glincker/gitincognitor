@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/glincker/gitincognito/internal/store"
-	"github.com/glincker/gitincognito/internal/testutil"
+	"github.com/glincker/gitincognitor/internal/store"
+	"github.com/glincker/gitincognitor/internal/testutil"
 )
 
 func TestInitPushesSeedMainAndIsIdempotent(t *testing.T) {

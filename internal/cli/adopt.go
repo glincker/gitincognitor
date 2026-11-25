@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/glincker/gitincognito/internal/git"
-	"github.com/glincker/gitincognito/internal/project"
-	"github.com/glincker/gitincognito/internal/syncer"
+	"github.com/glincker/gitincognitor/internal/git"
+	"github.com/glincker/gitincognitor/internal/project"
+	"github.com/glincker/gitincognitor/internal/syncer"
 )
 
 func init() { commands["adopt"] = cmdAdopt }
@@ -25,7 +25,7 @@ func cmdAdopt(c *Ctx, args []string) error {
 		return err
 	}
 	if fs.NArg() != 1 {
-		return errors.New("usage: git incognito adopt <folder>")
+		return errors.New("usage: git incognitor adopt <folder>")
 	}
 	src := fs.Arg(0)
 	if !filepath.IsAbs(src) {

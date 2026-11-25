@@ -1,15 +1,15 @@
-# gitincognito
+# gitincognitor
 
-Personal notes (docs-local, CLAUDE.local.md, research) tend to sit untracked inside shared and open source repos. Hiding them needs a `.gitignore` edit your team would see, and a disk loss deletes them. gitincognito keeps them in a real `.incognito/` folder inside each project, hides it through `.git/info/exclude`, and backs it up to a private remote you own. No tracked file in the project changes.
+Personal notes (docs-local, CLAUDE.local.md, research) tend to sit untracked inside shared and open source repos. Hiding them needs a `.gitignore` edit your team would see, and a disk loss deletes them. gitincognitor keeps them in a real `.incognito/` folder inside each project, hides it through `.git/info/exclude`, and backs it up to a private remote you own. No tracked file in the project changes.
 
 ## Quickstart
 
 ```
-git incognito init --remote <private-url>
-cd project && git incognito link
-git incognito adopt docs-local
-git incognito sync
-git incognito restore --all --remote <url>
+git incognitor init --remote <private-url>
+cd project && git incognitor link
+git incognitor adopt docs-local
+git incognitor sync
+git incognitor restore --all --remote <url>
 ```
 
 Requires git 2.42 or newer (`git worktree add --orphan`). Any git remote works.
@@ -46,7 +46,7 @@ All commands accept `--json`. Exit codes: 0 ok, 1 error, 2 unsafe state that nee
 
 ```
 go vet ./... && go test ./...
-go build -o bin/git-incognito ./cmd/git-incognito
+go build -o bin/git-incognitor ./cmd/git-incognitor
 ```
 
 Tests use temp directories and local bare remotes only. No network.

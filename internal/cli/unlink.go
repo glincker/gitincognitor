@@ -4,10 +4,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/glincker/gitincognito/internal/git"
-	"github.com/glincker/gitincognito/internal/project"
-	"github.com/glincker/gitincognito/internal/store"
-	"github.com/glincker/gitincognito/internal/syncer"
+	"github.com/glincker/gitincognitor/internal/git"
+	"github.com/glincker/gitincognitor/internal/project"
+	"github.com/glincker/gitincognitor/internal/store"
+	"github.com/glincker/gitincognitor/internal/syncer"
 )
 
 func init() { commands["unlink"] = cmdUnlink }

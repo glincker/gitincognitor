@@ -1,4 +1,4 @@
-module github.com/glincker/gitincognito
+module github.com/glincker/gitincognitor
 
 go 1.27.3
 

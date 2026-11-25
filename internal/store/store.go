@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/glincker/gitincognito/internal/git"
+	"github.com/glincker/gitincognitor/internal/git"
 )
 
 func CentralDir(home string) string { return filepath.Join(home, "store") }
