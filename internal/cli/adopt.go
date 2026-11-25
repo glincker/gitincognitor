@@ -15,6 +15,13 @@ import (
 
 func init() { commands["adopt"] = cmdAdopt }
 
+// Test seams, nil in production: they let tests change the folder at the
+// exact moments a concurrent edit could hurt.
+var (
+	adoptBeforeCopy func()
+	adoptAfterSync  func()
+)
+
 // cmdAdopt copies a folder into the notes branch, pushes, and only then
 // removes the original, so a failed push never loses files.
 func cmdAdopt(c *Ctx, args []string) error {
@@ -43,35 +50,35 @@ func cmdAdopt(c *Ctx, args []string) error {
 	if err != nil {
 		return err
 	}
+	dest := filepath.Join(info.Root, ".incognito", filepath.Base(src))
+	destExists, destMatches := destState(src, dest, plan.Files)
+	if refs := adoptRefusals(info, src, dest, destExists, destMatches, plan); len(refs) > 0 {
+		plan.Refusals = append(plan.Refusals, refs...)
+	}
 	if *dry {
 		return reportDryRun(c, plan)
 	}
 	if len(plan.Refusals) > 0 {
 		return Unsafe("%s", strings.Join(plan.Refusals, "; "))
 	}
-	if info.IsGit {
-		if out, _ := git.Run(info.Root, "ls-files", "--", src); out != "" {
-			return Unsafe("%s is tracked by the project repo, untrack it first", src)
-		}
-	}
 	p, err := linkProject(c, linkOpts{Store: "central", Name: *name})
 	if err != nil {
 		return err
 	}
-	dest := filepath.Join(p.Path, ".incognito", filepath.Base(src))
-	if _, err := os.Stat(dest); err == nil {
-		if alreadyAdopted(src, dest, plan.Files) {
-			c.Emit(map[string]any{"ok": true, "adopted": dest, "noop": true}, "already adopted "+src+" -> "+dest)
-			return nil
+	dest = filepath.Join(p.Path, ".incognito", filepath.Base(src))
+	if !destExists && len(plan.Files) > 0 {
+		if err := os.MkdirAll(dest, 0o755); err != nil {
+			return err
 		}
-		return Unsafe("%s already exists in the notes", dest)
+		if adoptBeforeCopy != nil {
+			adoptBeforeCopy()
+		}
+		if err := copyPlanned(src, dest, plan.Files); err != nil {
+			return err
+		}
 	}
-	if err := os.MkdirAll(dest, 0o755); err != nil {
-		return err
-	}
-	if err := copyPlanned(src, dest, plan.Files); err != nil {
-		return err
-	}
+	// A matching copy from an earlier run still goes through sync, verify and
+	// removal, so a rerun after a failed push cannot report false success.
 	wt := filepath.Join(p.Path, ".incognito")
 	r := syncer.Sync(c.Home, p, 0, time.Now(), true)
 	if r.Error != "" || (!r.Pushed && syncer.Ahead(wt) > 0) {
@@ -80,7 +87,10 @@ func cmdAdopt(c *Ctx, args []string) error {
 	if err := verifyAdopted(wt, filepath.Base(src), plan.Files); err != nil {
 		return err
 	}
-	if err := removeAdopted(src, plan); err != nil {
+	if adoptAfterSync != nil {
+		adoptAfterSync()
+	}
+	if err := removeAdopted(src, wt, p.Branch, filepath.Base(src), plan); err != nil {
 		return err
 	}
 	msg := "adopted " + src + " -> " + dest
@@ -89,6 +99,33 @@ func cmdAdopt(c *Ctx, args []string) error {
 	}
 	c.Emit(map[string]any{"ok": true, "adopted": dest, "ignored": plan.IgnoredTop}, msg)
 	return nil
+}
+
+// destState reports whether the notes copy exists and matches every planned file.
+func destState(src, dest string, files []string) (exists, matches bool) {
+	if _, err := os.Stat(dest); err != nil {
+		return false, false
+	}
+	return true, alreadyAdopted(src, dest, files)
+}
+
+// adoptRefusals lists what a real run would refuse before any side effect,
+// so dry-run and a real run agree.
+func adoptRefusals(info project.Info, src, dest string, destExists, destMatches bool, plan *adoptPlan) []string {
+	var refs []string
+	if info.IsGit {
+		if out, _ := git.Run(info.Root, "ls-files", "--", src); out != "" {
+			refs = append(refs, src+" is tracked by the project repo, untrack it first")
+		}
+		if project.PointerTracked(info.Root) {
+			refs = append(refs, "CLAUDE.local.md is tracked by this repo, untrack it first")
+		}
+	}
+	if destExists && !destMatches {
+		rel, _ := filepath.Rel(info.Root, dest)
+		refs = append(refs, fmt.Sprintf("%s already exists in the notes and does not match %s (partial or different copy); to redo it, delete %s and rerun adopt", dest, src, rel))
+	}
+	return refs
 }
 
 func within(parent, child string) bool {

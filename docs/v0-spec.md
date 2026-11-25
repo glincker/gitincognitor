@@ -23,7 +23,7 @@ All accept `--json`. Exit codes: 0 ok, 1 error, 2 unsafe state (needs a human).
 | --- | --- |
 | `init --remote <url>` | Create the store, push a seed `main`, write the registry. Refuses a remote it cannot verify as private when a provider API is available. |
 | `link [--store dedicated --remote <url>]` | Create branch and worktree, write exclude entries, write the `CLAUDE.local.md` pointer, register the project. Idempotent. |
-| `adopt [--dry-run] <path>` | Move an existing folder (for example docs-local) into the project's branch, then link. Refuses if the target is non-empty and tracked by the project repo. `--dry-run` writes nothing (works before `init`), reports copy and skip counts and bytes, and exits 2 on a refusal. |
+| `adopt [--dry-run] <path>` | Move an existing folder (for example docs-local) into the project's branch, then link. Refuses if the target is non-empty and tracked by the project repo. `--dry-run` writes nothing (works before `init`), reports copy and skip counts and bytes, and exits 2 on any refusal a real run would hit (nested git, symlink, tracked path or pointer, a different copy already in the notes). |
 | `sync [--all]` | Commit and push notes. No-op when clean. Never force-pushes. |
 | `restore [--all]` | Clone the store if missing, recreate each worktree, exclude entries and pointer from the registry. Prunes stale worktrees. |
 | `status` | Per project: linked, dirty, ahead or behind, last sync. |
