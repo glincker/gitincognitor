@@ -47,10 +47,10 @@ All accept `--json`. Exit codes: 0 ok, 1 error, 2 unsafe state (needs a human).
 ```yaml
 version: 1
 projects:
-  - name: thesvg
-    path: ~/G-Development/GLINRV6/thesvg
+  - name: myproject
+    path: ~/code/myproject
     store: central
-    branch: proj/thesvg
+    branch: proj/myproject
 ```
 
 ## Auto-sync (day 1)

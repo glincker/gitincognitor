@@ -1,6 +1,14 @@
 # gitincognitor
 
-Personal notes (docs-local, CLAUDE.local.md, research) tend to sit untracked inside shared and open source repos. Hiding them needs a `.gitignore` edit your team would see, and a disk loss deletes them. gitincognitor keeps them in a real `.incognito/` folder inside each project, hides it through `.git/info/exclude`, and backs it up to a private remote you own. No tracked file in the project changes.
+Personal notes (docs-local, CLAUDE.local.md, research) tend to sit untracked inside shared and open source repos. Hiding them needs a `.gitignore` edit your team would see, and a disk loss deletes them. gitincognitor keeps them in a real `.incognito/` folder inside each project, hides it through `.git/info/exclude`, and backs it up to a private remote you own. No tracked file in the project changes. The design reference is [docs/v0-spec.md](docs/v0-spec.md).
+
+## Install
+
+```
+go install github.com/glincker/gitincognitor/cmd/git-incognitor@latest
+```
+
+Prebuilt binaries for macOS and Linux (amd64 and arm64) are on the Releases page. Put the binary on your PATH as `git-incognitor` so `git incognitor ...` works.
 
 ## Quickstart
 
@@ -32,6 +40,7 @@ All commands accept `--json`. Exit codes: 0 ok, 1 error, 2 unsafe state that nee
 | `status` | Per project: linked, dirty, ahead, last sync. |
 | `doctor` | Check excludes, tracked notes, remote collisions and registry health. |
 | `unlink` | Remove the worktree and exclude entries, keep the branch. |
+| `version` | Print the version. |
 | `hooks install` | Opt in to a Claude Code Stop hook and a launchd timer running `sync --quiet`. |
 
 ## Safety rules
@@ -41,6 +50,14 @@ All commands accept `--json`. Exit codes: 0 ok, 1 error, 2 unsafe state that nee
 3. A pre-commit and pre-push guard blocks any staged path under `.incognito/`.
 4. `sync` never force-pushes and never deletes branches.
 5. `adopt` removes the original folder only after a verified push.
+
+## Status
+
+v0.x. Tested on macOS and Linux, not tested on Windows. Known limits:
+
+- The remote collision check does not normalize ssh ports or `insteadOf` rewrites.
+- The private-remote check cannot verify hosts other than GitHub.
+- Commit and push guards are installed only with `link --guard`.
 
 ## Development
 
