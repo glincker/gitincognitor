@@ -47,7 +47,7 @@ All commands accept `--json`. Exit codes: 0 ok, 1 error, 2 unsafe state that nee
 
 1. Never writes to a tracked project file, only `.git/info/exclude` and untracked files.
 2. `link` and `doctor` refuse a notes remote that matches any remote of the project.
-3. A pre-commit and pre-push guard blocks any staged path under `.incognito/`.
+3. With `link --guard`, a pre-commit and pre-push guard blocks any staged path under `.incognito/`.
 4. `sync` never force-pushes and never deletes branches.
 5. `adopt` removes the original folder only after a verified push.
 
